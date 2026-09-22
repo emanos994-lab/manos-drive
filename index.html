@@ -56,7 +56,7 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
       <div class="chips">
         <span class="chip" id="hubChip"><i class="dot"></i>CAR HUB OFFLINE</span>
         <span class="chip" id="obdChip"><i class="dot"></i>OBDII OFFLINE</span>
-        <span class="chip">APP 3.1</span>
+        <span class="chip">APP 3.2</span>
       </div>
     </div>
   </div>
@@ -97,7 +97,9 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
     <div class="mini"><span>Drive time</span><b id="totalTime">0m</b></div>
   </div>
   <div class="panel"><h3>Saved trips</h3><div id="tripList" class="muted">Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.</div></div>
-  <div class="actions" style="margin-top:10px"><button class="btn" onclick="openLatestMap()">OPEN LATEST IN GOOGLE MAPS</button><button class="btn" onclick="shareLatest()">SHARE LATEST TRIP</button></div>
+  <div class="actions" style="margin-top:10px"><button class="btn blue" onclick="$('syncFile').click()">IMPORT CAR HUB BACKUP</button><button class="btn" onclick="openLatestMap()">OPEN LATEST IN GOOGLE MAPS</button><button class="btn" onclick="shareLatest()">SHARE LATEST TRIP</button></div>
+<input id="syncFile" type="file" accept=".json,application/json" style="display:none" onchange="importHubBackup(this.files[0])">
+<div class="panel" id="tripDetailPanel" style="display:none"><h3>Detailed telemetry</h3><div class="muted" id="tripDetailInfo"></div><canvas id="tripChart" height="180" style="width:100%;margin-top:12px"></canvas><div id="timeline" style="overflow:auto;margin-top:12px"></div></div>
 </section>
 
 <section id="health" class="page">
@@ -138,7 +140,7 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
 
 <script>
 const HUB='http://192.168.4.1', KEY='manosDriveStateV3', $=id=>document.getElementById(id);
-let store={settings:{fuelprice:'1.80',tempAlert:'105',voltAlert:'11.8',reportEmail:''},lastVehicle:null,trips:[],pending:[],gpsTrack:null};
+let store={settings:{fuelprice:'1.80',tempAlert:'105',voltAlert:'11.8',reportEmail:''},lastVehicle:null,trips:[],pending:[],gpsTrack:null,details:{}};
 let geoWatch=null,lastMapUpdate=0;
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x)store={...store,...x,settings:{...store.settings,...(x.settings||{})}}}catch(e){};renderLocal()}
 function persist(){localStorage.setItem(KEY,JSON.stringify(store))}
@@ -150,8 +152,11 @@ function renderLocal(){
   renderTrips()
 }
 function healthCheck(v){let m='Οι τελευταίες αποθηκευμένες ενδείξεις είναι εντός των ορίων που έχεις ορίσει.';if(Number(v.coolant)>=Number(store.settings.tempAlert))m='Προσοχή: η τελευταία θερμοκρασία ψυκτικού ήταν πάνω από το όριο.';if(Number(v.voltage)>0&&Number(v.voltage)<=Number(store.settings.voltAlert))m='Προσοχή: η τελευταία τάση ήταν χαμηλή.';$('healthText').textContent=m}
-function renderTrips(){const t=store.trips||[];$('tripCount').textContent=t.length;$('totalKm').textContent=t.reduce((a,x)=>a+Number(x.distance||0),0).toFixed(1)+' km';const mins=Math.round(t.reduce((a,x)=>a+Number(x.durationSec||0),0)/60);$('totalTime').textContent=mins+'m';$('tripList').innerHTML=t.length?t.slice().reverse().map((x,i)=>'<div class="trip"><div class="tripTop"><strong>'+new Date(x.endedAt||x.savedAt||Date.now()).toLocaleString('el-GR')+'</strong><small>'+Number(x.distance||0).toFixed(1)+' km</small></div><div class="muted">'+(x.source==='gps'?'GPS route · ':'')+'Max '+Math.round(x.maxSpeed||0)+' km/h · Avg '+Math.round(x.avgSpeed||0)+' km/h · Temp '+Math.round(x.maxCoolant||0)+'°C</div>'+(x.points&&x.points.length?'<button class="btn" style="margin-top:9px" onclick="openTripMap(store.trips['+(t.length-1-i)+'])">MAP</button>':'')+'</div>').join(''):'Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.'}
+function renderTrips(){const t=store.trips||[];$('tripCount').textContent=t.length;$('totalKm').textContent=t.reduce((a,x)=>a+Number(x.distance||0),0).toFixed(1)+' km';const mins=Math.round(t.reduce((a,x)=>a+Number(x.durationSec||0),0)/60);$('totalTime').textContent=mins+'m';$('tripList').innerHTML=t.length?t.slice().reverse().map((x,i)=>{const idx=t.length-1-i,d=store.details&&store.details[String(x.id)];return '<div class="trip"><div class="tripTop"><strong>Trip '+(x.id||idx+1)+' · '+new Date(x.endedAt||x.savedAt||Date.now()).toLocaleString('el-GR')+'</strong><small>'+Number(x.distance||0).toFixed(1)+' km</small></div><div class="muted">Max '+Math.round(x.maxSpeed||0)+' km/h · Avg '+Math.round(x.avgSpeed||0)+' km/h · Max RPM '+Math.round(x.maxRpm||0)+' · Temp '+Math.round(x.maxCoolant||0)+'°C · Load '+Math.round(x.maxLoad||0)+'% · Throttle '+Math.round(x.maxThrottle||0)+'%</div>'+(d?'<button class="btn blue" style="margin-top:9px" onclick="showTripDetail(\''+String(x.id)+'\')">DETAILS & GRAPH</button> ':'')+(x.points&&x.points.length?'<button class="btn" style="margin-top:9px" onclick="openTripMap(store.trips['+idx+'])">MAP</button>':'')+'</div>'}).join(''):'Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.'}
 
+async function importHubBackup(file){if(!file)return;try{const data=JSON.parse(await file.text());const trips=Array.isArray(data)?data:(data.trips||[]);const byId=new Map((store.trips||[]).filter(x=>x.id!==undefined).map(x=>[String(x.id),x]));for(const t of trips){if(t.id!==undefined)byId.set(String(t.id),{...(byId.get(String(t.id))||{}),...t,syncedAt:Date.now()})}const gps=(store.trips||[]).filter(x=>x.source==='gps'&&x.id===undefined);store.trips=[...gps,...byId.values()];store.details=store.details||{};if(data.latestDetail&&data.latestDetail.tripId&&Array.isArray(data.latestDetail.samples)){store.details[String(data.latestDetail.tripId)]=data.latestDetail}persist();renderTrips();$('memoryTitle').textContent='Car Hub sync complete';$('memoryInfo').textContent='Εισήχθησαν '+trips.length+' trips. Το αναλυτικό timeline αποθηκεύτηκε στο iPhone.'}catch(e){$('memoryTitle').textContent='Import failed';$('memoryInfo').textContent='Το αρχείο δεν είναι έγκυρο MANOS DRIVE backup.'}}
+function showTripDetail(id){const d=store.details&&store.details[String(id)];if(!d||!d.samples)return;const p=$('tripDetailPanel');p.style.display='block';const a=d.samples;$('tripDetailInfo').textContent=a.length+' telemetry samples · περίπου κάθε '+(d.intervalSec||15)+' sec · Trip '+id;$('timeline').innerHTML='<table style="width:100%;font-size:11px;border-collapse:collapse"><tr><th>Time</th><th>km/h</th><th>RPM</th><th>°C</th><th>V</th><th>Load</th><th>Throttle</th><th>Intake</th><th>MAP</th><th>MAF</th><th>Fuel</th><th>Timing</th></tr>'+a.map(s=>'<tr><td>'+Math.floor(s.t/60)+':'+String(s.t%60).padStart(2,'0')+'</td><td>'+s.speed+'</td><td>'+s.rpm+'</td><td>'+s.coolant+'</td><td>'+s.voltage+'</td><td>'+s.load+'%</td><td>'+s.throttle+'%</td><td>'+s.intake+'°</td><td>'+s.map+'</td><td>'+s.maf+'</td><td>'+s.fuel+'%</td><td>'+s.timing+'°</td></tr>').join('')+'</table>';drawTripChart(a);p.scrollIntoView({behavior:'smooth'})}
+function drawTripChart(a){const cv=$('tripChart'),dpr=window.devicePixelRatio||1,w=Math.max(300,cv.clientWidth),h=180;cv.width=w*dpr;cv.height=h*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);x.strokeStyle='#26384d';x.lineWidth=1;for(let y=20;y<h;y+=40){x.beginPath();x.moveTo(0,y);x.lineTo(w,y);x.stroke()}const series=[['speed',220],['coolant',130],['rpm',7000]];const cols=['#35a7ff','#ff6b78','#7fe0b8'];series.forEach((q,qi)=>{x.strokeStyle=cols[qi];x.lineWidth=2;x.beginPath();a.forEach((s,i)=>{const px=i/Math.max(1,a.length-1)*(w-8)+4,py=h-8-(Number(s[q[0]])/q[1])*(h-20);if(i===0)x.moveTo(px,py);else x.lineTo(px,py)});x.stroke()});x.font='11px -apple-system';x.fillStyle='#35a7ff';x.fillText('Speed',8,14);x.fillStyle='#ff6b78';x.fillText('Coolant',55,14);x.fillStyle='#7fe0b8';x.fillText('RPM',112,14)}
 function haversine(a,b){const R=6371,toRad=x=>x*Math.PI/180,dLat=toRad(b.lat-a.lat),dLon=toRad(b.lng-a.lng),la1=toRad(a.lat),la2=toRad(b.lat);const q=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
 function updateMap(lat,lng,acc){
   const now=Date.now(); if(now-lastMapUpdate<7000)return; lastMapUpdate=now;
