@@ -1,76 +1,39 @@
 <!doctype html>
 <html lang="el">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090b10">
-<link rel="manifest" href="manifest.webmanifest">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090d"><link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>MANOS DRIVE</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#090b10;color:#f4f6f8}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#111722,#090b10 45%);min-height:100vh}
-header{padding:20px;position:sticky;top:0;background:#090b10dd;backdrop-filter:blur(12px);border-bottom:1px solid #252a34}
-.brand{font-weight:900;letter-spacing:2px;font-size:22px}.sub{font-size:11px;opacity:.6;letter-spacing:2px}
-main{padding:16px;max-width:900px;margin:auto}.status{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
-.badge{padding:8px 11px;border:1px solid #343b49;border-radius:999px;font-size:12px;background:#141923}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:#11161f;border:1px solid #252c38;border-radius:18px;padding:16px;min-height:112px}
-.label{font-size:11px;opacity:.58;text-transform:uppercase;letter-spacing:1px}.value{font-size:30px;font-weight:800;margin-top:9px}.unit{font-size:12px;opacity:.55}
-.panel{margin-top:12px;background:#11161f;border:1px solid #252c38;border-radius:18px;padding:16px}
-button{background:#f2f4f7;color:#090b10;border:0;border-radius:12px;padding:12px 14px;font-weight:800;margin:5px 4px 5px 0}
-button.secondary{background:#1c2330;color:#fff;border:1px solid #343d4d}
-input{background:#090d13;color:#fff;border:1px solid #343d4d;border-radius:10px;padding:11px;width:100%;margin:6px 0}
-pre{white-space:pre-wrap;font-size:12px;opacity:.72;max-height:180px;overflow:auto}
-nav{display:flex;gap:7px;overflow:auto;margin:14px 0}.tab{white-space:nowrap}small{opacity:.6}
-@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
-</style>
-</head>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#f7f8fb;background:#07090d}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#1c2737 0,#0b0e14 36%,#07090d 72%);padding-bottom:100px}header{padding:calc(20px + env(safe-area-inset-top)) 20px 18px;border-bottom:1px solid #202633;background:#090c12e8;backdrop-filter:blur(18px);position:sticky;top:0;z-index:5}.top{max-width:760px;margin:auto;display:flex;align-items:center;justify-content:space-between}.brand{font-size:24px;font-weight:900;letter-spacing:2.6px}.sub{font-size:10px;letter-spacing:3px;color:#8992a1;margin-top:2px}.dot{width:10px;height:10px;border-radius:50%;background:#596171;box-shadow:0 0 0 5px #59617118}.dot.on{background:#63e6a5;box-shadow:0 0 18px #63e6a5}.wrap{max-width:760px;margin:auto;padding:18px}.hero{padding:20px;border:1px solid #242b38;border-radius:26px;background:linear-gradient(145deg,#151b25,#0e1219);box-shadow:0 20px 50px #0006}.heroRow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.eyebrow{font-size:11px;letter-spacing:2px;color:#8992a1}.state{font-size:25px;font-weight:850;margin-top:5px}.pill{font-size:11px;border:1px solid #30394a;border-radius:999px;padding:8px 10px;color:#aab2bf;white-space:nowrap}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}.metric{min-height:130px;border-radius:22px;padding:17px;background:#11161f;border:1px solid #242b38}.metric .label{font-size:11px;letter-spacing:1.5px;color:#8c95a3}.metric .num{font-size:38px;font-weight:850;margin-top:15px}.unit{font-size:12px;color:#788190}.sectionTitle{font-size:12px;letter-spacing:1.8px;color:#8992a1;margin:24px 3px 10px}.panel{border:1px solid #242b38;border-radius:22px;background:#10151d;padding:17px;margin-bottom:12px}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.title{font-weight:800;font-size:17px}.muted{color:#8992a1;font-size:13px;margin-top:5px;line-height:1.4}.btn{border:0;border-radius:13px;padding:12px 14px;font-weight:850;background:#f5f7fa;color:#080a0e}.btn.dark{background:#1a202b;color:#f5f7fa;border:1px solid #303848}.statusline{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.chip{font-size:11px;padding:7px 9px;border-radius:999px;background:#0b0f15;border:1px solid #28303e;color:#a8b0bd}.nav{position:fixed;z-index:10;bottom:0;left:0;right:0;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:#090c12ed;backdrop-filter:blur(20px);border-top:1px solid #202633}.navin{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.nav button{border:0;background:transparent;color:#7f8998;padding:9px 2px;font-size:10px;font-weight:800}.nav button.active{color:#fff}.ico{font-size:20px;display:block;margin-bottom:3px}.page{display:none}.page.active{display:block}input{width:100%;background:#090d13;border:1px solid #303848;color:#fff;border-radius:12px;padding:12px;margin-top:9px}#log{font-size:11px;color:#7f8998;white-space:pre-wrap;max-height:130px;overflow:auto}.empty{text-align:center;padding:30px 10px;color:#8992a1}.bigIcon{font-size:34px;margin-bottom:8px}@media(min-width:650px){.metrics{grid-template-columns:repeat(4,1fr)}}
+</style></head>
 <body>
-<header><div class="brand">MANOS DRIVE</div><div class="sub">VEHICLE INTELLIGENCE</div></header>
-<main>
-<div class="status"><span class="badge" id="vehicle">VEHICLE OFFLINE</span><span class="badge" id="obd">OBD NOT CONNECTED</span><span class="badge">APP v1.1.0</span></div>
-<nav>
-<button class="secondary tab" onclick="show('dash')">DASH</button>
-<button class="secondary tab" onclick="show('obdm')">OBD MANAGER</button>
-<button class="secondary tab" onclick="show('update')">UPDATES</button>
-<button class="secondary tab" onclick="show('settings')">SETTINGS</button>
-</nav>
-<section id="dash">
-<div class="grid">
-<div class="card"><div class="label">Speed</div><div class="value" id="speed">--</div><span class="unit">km/h</span></div>
-<div class="card"><div class="label">RPM</div><div class="value" id="rpm">--</div><span class="unit">rpm</span></div>
-<div class="card"><div class="label">Coolant</div><div class="value" id="coolant">--</div><span class="unit">°C</span></div>
-<div class="card"><div class="label">Voltage</div><div class="value" id="voltage">--</div><span class="unit">V</span></div>
+<header><div class="top"><div><div class="brand">MANOS DRIVE</div><div class="sub">VEHICLE INTELLIGENCE</div></div><div id="dot" class="dot"></div></div></header>
+<div class="wrap">
+<section id="dash" class="page active">
+<div class="hero"><div class="heroRow"><div><div class="eyebrow">TIGUAN CAR HUB</div><div id="vehicleState" class="state">Vehicle offline</div></div><div id="fwBadge" class="pill">APP 2.0</div></div><div class="statusline"><span id="hubChip" class="chip">CAR HUB OFFLINE</span><span id="obdChip" class="chip">OBDII OFFLINE</span></div></div>
+<div class="metrics"><div class="metric"><div class="label">SPEED</div><div id="speed" class="num">--</div><span class="unit">km/h</span></div><div class="metric"><div class="label">RPM</div><div id="rpm" class="num">--</div><span class="unit">rpm</span></div><div class="metric"><div class="label">COOLANT</div><div id="coolant" class="num">--</div><span class="unit">°C</span></div><div class="metric"><div class="label">VOLTAGE</div><div id="voltage" class="num">--</div><span class="unit">V</span></div></div>
+<div class="sectionTitle">CONNECTION</div><div class="panel"><div class="row"><div><div class="title">MANOS Car Hub</div><div id="hubmsg" class="muted">Η εφαρμογή λειτουργεί offline. Το αυτοκίνητο θα συνδεθεί όταν είναι διαθέσιμο.</div></div><button class="btn" onclick="connectHub()">RETRY</button></div></div>
+</section>
+<section id="trips" class="page"><div class="sectionTitle">TRIPS</div><div class="panel empty"><div class="bigIcon">↗</div><div class="title">Δεν υπάρχουν διαδρομές ακόμα</div><div class="muted">Οι διαδρομές θα αποθηκεύονται εδώ όταν ενεργοποιήσουμε το trip logging στο Car Hub.</div></div></section>
+<section id="diag" class="page"><div class="sectionTitle">DIAGNOSTICS</div><div class="panel"><div class="title">Vehicle health</div><div class="muted">DTC / check-engine diagnostics θα προστεθούν στο επόμενο firmware API.</div></div><div class="panel"><div class="row"><div><div class="title">OBDII</div><div id="obdState" class="muted">Not connected</div></div><button class="btn dark" onclick="scanOBD()">SCAN</button></div><div id="devices"></div></div></section>
+<section id="updates" class="page"><div class="sectionTitle">UPDATES</div><div class="panel"><div class="title">Car Hub firmware</div><div id="updateInfo" class="muted">Σύνδεσε το MANOS-CAR για έλεγχο της έκδοσης.</div><input id="fw" type="file" accept=".bin"><button class="btn" style="margin-top:10px" onclick="uploadFirmware()">INSTALL UPDATE</button><div id="upmsg" class="muted"></div></div></section>
+<section id="settings" class="page"><div class="sectionTitle">SETTINGS</div><div class="panel"><div class="title">Offline settings</div><div class="muted">Αποθηκεύονται στο iPhone ακόμα και όταν το ESP32 είναι κλειστό.</div><label class="muted">Τιμή καυσίμου €/L</label><input id="fuelprice" type="number" step=".01"><button class="btn" style="margin-top:10px" onclick="saveSettings()">SAVE</button></div><div class="panel"><div class="title">Activity log</div><pre id="log"></pre></div></section>
 </div>
-<div class="panel"><b>Car Hub</b><p id="hubmsg">Αναζήτηση MANOS CAR HUB…</p><button onclick="connectHub()">CONNECT / RETRY</button></div>
-</section>
-<section id="obdm" hidden>
-<div class="panel"><b>OBD CONNECTION</b><p id="obdstate">Not connected</p>
-<button onclick="scanOBD()">SCAN BLUETOOTH</button>
-<button class="secondary" onclick="api('/api/obd/retry','POST')">RETRY</button>
-<button class="secondary" onclick="api('/api/obd/disconnect','POST')">DISCONNECT</button>
-<div id="devices"></div></div>
-</section>
-<section id="update" hidden>
-<div class="panel"><b>Firmware Update</b><p>Η εγκατάσταση ξεκινά μόνο όταν την πατήσεις εσύ.</p>
-<input id="fw" type="file" accept=".bin"><button onclick="uploadFirmware()">INSTALL FIRMWARE</button><p id="upmsg"></p>
-</div></section>
-<section id="settings" hidden><div class="panel"><b>Settings</b><label>Τιμή καυσίμου €/L</label><input id="fuelprice" type="number" step=".01"><button onclick="saveSettings()">SAVE LOCALLY</button></div></section>
-<pre id="log"></pre>
-</main>
+<div class="nav"><div class="navin"><button class="active" onclick="go('dash',this)"><span class="ico">⌁</span>DRIVE</button><button onclick="go('trips',this)"><span class="ico">↗</span>TRIPS</button><button onclick="go('diag',this)"><span class="ico">◇</span>HEALTH</button><button onclick="go('updates',this)"><span class="ico">↓</span>UPDATES</button><button onclick="go('settings',this)"><span class="ico">⚙</span>SETTINGS</button></div></div>
 <script>
-const HUB='http://192.168.4.1',$=id=>document.getElementById(id);
-function log(x){$('log').textContent=new Date().toLocaleTimeString()+' '+x+'\n'+$('log').textContent}
-function show(id){['dash','obdm','update','settings'].forEach(x=>$(x).hidden=x!==id)}
-function saveSettings(){localStorage.fuelprice=$('fuelprice').value;log('Settings saved')}
+const HUB='http://192.168.4.1',$=id=>document.getElementById(id);let online=false;
+function go(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active')}
+function log(x){$('log').textContent=new Date().toLocaleTimeString()+'  '+x+'\n'+$('log').textContent}
 $('fuelprice').value=localStorage.fuelprice||'1.80';
+function saveSettings(){localStorage.fuelprice=$('fuelprice').value;log('Offline settings saved')}
 async function api(path,method='GET',body){const r=await fetch(HUB+path,{method,body,cache:'no-store'});if(!r.ok)throw Error(r.status);const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r.text()}
-async function connectHub(){try{const s=await api('/api/status');$('vehicle').textContent='VEHICLE CONNECTED';$('hubmsg').textContent='MANOS CAR HUB connected';render(s);log('Car Hub connected')}catch(e){$('vehicle').textContent='VEHICLE OFFLINE';$('hubmsg').textContent='Car Hub offline'}}
-function render(s){if(!s)return;$('obd').textContent=s.obd_connected?'OBD CONNECTED':('OBD '+(s.obd_state||'NOT CONNECTED').toUpperCase());$('obdstate').textContent=s.obd_state||'Not connected';for(const k of ['speed','rpm','coolant','voltage'])if(s[k]!==undefined)$(k).textContent=s[k]}
-async function scanOBD(){try{await api('/api/obd/scan','POST');log('Bluetooth scan started');setTimeout(loadDevices,11000)}catch(e){log('Bluetooth scan error')}}
-async function loadDevices(){try{const ds=await api('/api/obd/devices');$('devices').innerHTML=ds.map(d=>`<p><button class="secondary" onclick="selectOBD('${(d.name||'').replaceAll("'","")}')">CONNECT</button> ${d.name||'Unknown'} <small>${d.address||''} RSSI ${d.rssi??''}</small></p>`).join('')}catch(e){log('Device list error')}}
-async function selectOBD(name){const pin=prompt('OBD PIN (συνήθως 1234 ή 0000)','1234')||'1234';const body=new URLSearchParams({name,pin});try{await api('/api/obd/connect','POST',body);log('OBD connect requested')}catch(e){log('OBD connect error')}}
-async function uploadFirmware(){const f=$('fw').files[0];if(!f){$('upmsg').textContent='Διάλεξε πρώτα .bin';return}const fd=new FormData();fd.append('firmware',f);$('upmsg').textContent='Uploading… Μην κόψεις το ρεύμα.';try{await api('/update','POST',fd);$('upmsg').textContent='Update sent. Το Car Hub θα κάνει restart.'}catch(e){$('upmsg').textContent='Update failed: '+e}}
-setInterval(async()=>{try{render(await api('/api/status'))}catch(e){}},1500);
-connectHub();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
-</script>
-</body></html>
+function setOffline(){online=false;$('dot').classList.remove('on');$('vehicleState').textContent='Vehicle offline';$('hubChip').textContent='CAR HUB OFFLINE';$('obdChip').textContent='OBDII OFFLINE';$('hubmsg').textContent='Η εφαρμογή είναι ενεργή. Περιμένει το MANOS Car Hub.';['speed','rpm','coolant','voltage'].forEach(k=>$(k).textContent='--')}
+function render(s){online=true;$('dot').classList.add('on');$('vehicleState').textContent='Vehicle connected';$('hubChip').textContent='CAR HUB ONLINE';$('obdChip').textContent=s.obd_connected?'OBDII CONNECTED':'OBDII '+(s.obd_state||'OFFLINE');$('obdState').textContent=s.obd_state||'Not connected';$('hubmsg').textContent='MANOS Car Hub '+s.version+' connected';$('updateInfo').textContent='Current Car Hub firmware: '+s.version;for(const k of ['speed','rpm','coolant','voltage'])if(s[k]!==undefined)$(k).textContent=s[k]}
+async function connectHub(){try{render(await api('/api/status'));log('Car Hub connected')}catch(e){setOffline()}}
+async function scanOBD(){try{await api('/api/obd/scan','POST');$('obdState').textContent='Scanning Bluetooth…';setTimeout(loadDevices,11000)}catch(e){$('obdState').textContent='Car Hub offline'}}
+async function loadDevices(){try{const ds=await api('/api/obd/devices');$('devices').innerHTML=ds.map(d=>'<div class="panel"><b>'+(d.name||'Unknown')+'</b><div class="muted">'+(d.address||'')+' · RSSI '+(d.rssi??'')+'</div></div>').join('')||'<div class="muted">No Bluetooth devices found.</div>'}catch(e){}}
+async function uploadFirmware(){const f=$('fw').files[0];if(!f){$('upmsg').textContent='Διάλεξε πρώτα το .bin firmware.';return}const fd=new FormData();fd.append('firmware',f);$('upmsg').textContent='Uploading… Μην κόψεις το ρεύμα.';try{await api('/update','POST',fd);$('upmsg').textContent='Update sent. Το Car Hub κάνει restart.'}catch(e){$('upmsg').textContent='Δεν υπάρχει σύνδεση με το Car Hub.'}}
+setInterval(connectHub,3000);connectHub();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+</script></body></html>
