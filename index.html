@@ -1,27 +1,140 @@
-<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07090d"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>MANOS DRIVE</title><style>
-:root{font-family:system-ui,-apple-system,sans-serif;color:#f7f8fb;background:#07090d}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#1c2737,#0b0e14 38%,#07090d 72%);padding-bottom:100px}header{padding:calc(20px + env(safe-area-inset-top)) 20px 18px;border-bottom:1px solid #202633;background:#090c12e8;backdrop-filter:blur(18px);position:sticky;top:0;z-index:5}.top,.wrap,.navin{max-width:760px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between}.brand{font-size:24px;font-weight:900;letter-spacing:2.6px}.sub,.label,.sectionTitle{font-size:10px;letter-spacing:2px;color:#8992a1}.dot{width:10px;height:10px;border-radius:50%;background:#596171;box-shadow:0 0 0 5px #59617118}.dot.on{background:#63e6a5;box-shadow:0 0 18px #63e6a5}.wrap{padding:18px}.hero,.panel,.metric{border:1px solid #242b38;background:#10151d}.hero{padding:20px;border-radius:26px;background:linear-gradient(145deg,#151b25,#0e1219)}.heroRow,.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.state{font-size:25px;font-weight:850;margin-top:5px}.pill,.chip{font-size:11px;border:1px solid #30394a;border-radius:999px;padding:8px 10px;color:#aab2bf}.statusline{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}.metric{min-height:130px;border-radius:22px;padding:17px}.num{font-size:38px;font-weight:850;margin-top:15px}.unit,.muted{color:#8992a1;font-size:13px}.sectionTitle{font-size:12px;margin:24px 3px 10px}.panel{border-radius:22px;padding:17px;margin-bottom:12px}.title{font-weight:800;font-size:17px}.muted{margin-top:5px;line-height:1.45}.btn{border:0;border-radius:13px;padding:12px 14px;font-weight:850;background:#f5f7fa;color:#080a0e}.btn.dark{background:#1a202b;color:#fff;border:1px solid #303848}input{width:100%;background:#090d13;border:1px solid #303848;color:#fff;border-radius:12px;padding:12px;margin-top:9px}.nav{position:fixed;z-index:10;bottom:0;left:0;right:0;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:#090c12ed;backdrop-filter:blur(20px);border-top:1px solid #202633}.navin{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.nav button{border:0;background:transparent;color:#7f8998;padding:9px 2px;font-size:10px;font-weight:800}.nav button.active{color:#fff}.ico{font-size:20px;display:block;margin-bottom:3px}.page{display:none}.page.active{display:block}.empty{text-align:center;padding:30px 10px}.sync{color:#63e6a5}.trip{padding:13px 0;border-bottom:1px solid #252c38}.trip:last-child{border:0}#log{font-size:11px;color:#7f8998;white-space:pre-wrap;max-height:130px;overflow:auto}@media(min-width:650px){.metrics{grid-template-columns:repeat(4,1fr)}}
-</style></head><body><header><div class="top"><div><div class="brand">MANOS DRIVE</div><div class="sub">VEHICLE INTELLIGENCE</div></div><div id="dot" class="dot"></div></div></header><div class="wrap">
-<section id="dash" class="page active"><div class="hero"><div class="heroRow"><div><div class="label">TIGUAN CAR HUB</div><div id="vehicleState" class="state">Vehicle offline</div></div><div class="pill">APP 2.1</div></div><div class="statusline"><span id="hubChip" class="chip">CAR HUB OFFLINE</span><span id="obdChip" class="chip">OBDII OFFLINE</span><span id="syncChip" class="chip">OFFLINE MEMORY READY</span></div></div><div class="metrics"><div class="metric"><div class="label">SPEED</div><div id="speed" class="num">--</div><span class="unit">km/h</span></div><div class="metric"><div class="label">RPM</div><div id="rpm" class="num">--</div><span class="unit">rpm</span></div><div class="metric"><div class="label">COOLANT</div><div id="coolant" class="num">--</div><span class="unit">°C</span></div><div class="metric"><div class="label">VOLTAGE</div><div id="voltage" class="num">--</div><span class="unit">V</span></div></div><div class="sectionTitle">LAST VEHICLE DATA</div><div class="panel"><div id="lastSeen" class="title">Δεν υπάρχουν αποθηκευμένα δεδομένα ακόμα</div><div id="lastData" class="muted">Μόλις συνδεθεί το Car Hub, η τελευταία κατάσταση θα κρατιέται στο iPhone.</div></div></section>
-<section id="trips" class="page"><div class="sectionTitle">TRIPS · OFFLINE HISTORY</div><div id="tripList" class="panel empty"><div class="title">Δεν υπάρχουν διαδρομές ακόμα</div><div class="muted">Το ιστορικό είναι έτοιμο τοπικά. Η πραγματική έναρξη/λήξη trip θα έρθει με το επόμενο firmware API.</div></div></section>
-<section id="diag" class="page"><div class="sectionTitle">HEALTH</div><div class="panel"><div class="title">OBDII</div><div id="obdState" class="muted">Not connected</div><button class="btn dark" style="margin-top:10px" onclick="scanOBD()">SCAN BLUETOOTH</button><div id="devices"></div></div></section>
-<section id="updates" class="page"><div class="sectionTitle">UPDATES</div><div class="panel"><div class="title">Car Hub firmware</div><div id="updateInfo" class="muted">Σύνδεσε το MANOS-CAR για έλεγχο έκδοσης.</div><input id="fw" type="file" accept=".bin"><button class="btn" style="margin-top:10px" onclick="uploadFirmware()">INSTALL UPDATE</button><div id="upmsg" class="muted"></div></div></section>
-<section id="settings" class="page"><div class="sectionTitle">OFFLINE SETTINGS</div><div class="panel"><div class="title">Ρυθμίσεις εφαρμογής</div><div class="muted">Αποθηκεύονται αμέσως στο iPhone. Οι ρυθμίσεις που αφορούν το Car Hub μπαίνουν σε ουρά συγχρονισμού όταν το ESP32 είναι offline.</div><label class="muted">Τιμή καυσίμου €/L</label><input id="fuelprice" type="number" step=".01"><label class="muted">Προειδοποίηση θερμοκρασίας °C</label><input id="tempAlert" type="number" step="1"><label class="muted">Προειδοποίηση χαμηλής τάσης V</label><input id="voltAlert" type="number" step=".1"><button class="btn" style="margin-top:10px" onclick="saveSettings()">SAVE OFFLINE</button><div id="pending" class="muted"></div></div><div class="panel"><div class="title">Activity log</div><pre id="log"></pre></div></section></div>
-<div class="nav"><div class="navin"><button class="active" onclick="go('dash',this)"><span class="ico">⌁</span>DRIVE</button><button onclick="go('trips',this)"><span class="ico">↗</span>TRIPS</button><button onclick="go('diag',this)"><span class="ico">◇</span>HEALTH</button><button onclick="go('updates',this)"><span class="ico">↓</span>UPDATES</button><button onclick="go('settings',this)"><span class="ico">⚙</span>SETTINGS</button></div></div><script>
-const HUB='http://192.168.4.1',$=id=>document.getElementById(id);let online=false,lastLogOnline=false;const KEY='manosDriveStateV1';
-let store=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{fuelprice:'1.80',tempAlert:'105',voltAlert:'11.8'},lastVehicle:null,trips:[],pending:[]};
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06080c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<title>MANOS DRIVE</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f6f8fb;background:#06080c;--panel:#10141c;--line:#242b38;--muted:#8d96a6;--accent:#e9eef7}
+*{box-sizing:border-box}html,body{margin:0;background:#06080c;color:#f6f8fb;min-height:100%}body{padding-bottom:92px}
+header{position:sticky;top:0;z-index:20;padding:calc(env(safe-area-inset-top) + 14px) 20px 14px;background:#06080ce8;backdrop-filter:blur(18px);border-bottom:1px solid #171c25}
+.brand{font-size:25px;font-weight:950;letter-spacing:4px}.sub{font-size:10px;letter-spacing:4px;color:#737d8f;margin-top:3px}
+main{max-width:820px;margin:auto;padding:18px}
+.hero{position:relative;min-height:270px;border:1px solid var(--line);border-radius:28px;overflow:hidden;background:#0c1017;box-shadow:0 18px 60px #0008}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#080b10 0%,#080b10c9 39%,#080b1040 72%,#080b1015 100%),linear-gradient(0deg,#080b10 0%,transparent 55%),url("https://upload.wikimedia.org/wikipedia/commons/f/fb/VW_Tiguan_front_20071228.jpg") center/cover no-repeat}
+.heroInner{position:relative;z-index:2;padding:27px 24px;display:flex;flex-direction:column;min-height:270px;justify-content:flex-end}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#9aa3b2;text-transform:uppercase}.hero h1{margin:8px 0 5px;font-size:34px;line-height:1}.hero p{margin:0;color:#a4adbb;font-size:13px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chip{border:1px solid #333c4c;background:#111721cc;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:750;color:#b8c0cd}
+.chip.on{color:#f7f9fc;border-color:#536071;box-shadow:inset 0 0 0 1px #ffffff0d}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#5b6270;margin-right:7px}.on .dot{background:#dfe7f3;box-shadow:0 0 12px #dfe7f3}
+.sectionTitle{margin:24px 4px 11px;font-size:11px;letter-spacing:3px;color:#858e9e;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.card{background:linear-gradient(145deg,#121722,#0d1118);border:1px solid var(--line);border-radius:23px;padding:17px;min-height:142px}
+.card .label{font-size:10px;letter-spacing:2px;color:#8e97a7}.value{font-weight:900;font-size:36px;margin-top:22px;letter-spacing:-1px}.unit{font-size:12px;color:#7d8798;margin-top:3px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mini{background:#0e1219;border:1px solid #202733;border-radius:18px;padding:14px}.mini b{display:block;font-size:20px;margin-top:8px}.mini span{font-size:9px;color:#7f8999;letter-spacing:1px;text-transform:uppercase}
+.panel{background:#0e1219;border:1px solid #222a36;border-radius:24px;padding:18px;margin-top:10px}.panel h3{margin:0 0 6px;font-size:18px}.muted{color:#8a94a4;font-size:13px;line-height:1.5}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{appearance:none;border:1px solid #303949;background:#151b25;color:#f4f6fa;border-radius:16px;padding:14px;font-weight:800;font-size:12px}.btn.primary{background:#edf1f7;color:#080a0e;border-color:#edf1f7}.btn.full{width:100%;margin-top:10px}
+.trip{padding:14px 0;border-bottom:1px solid #1d2430}.trip:last-child{border-bottom:0}.tripTop{display:flex;justify-content:space-between;gap:10px}.trip strong{font-size:14px}.trip small{color:#7f8998}
+input{width:100%;margin:7px 0 13px;background:#080b10;border:1px solid #303847;border-radius:13px;padding:13px;color:#fff;font-size:15px}
+label{font-size:10px;color:#8a94a4;letter-spacing:1px;text-transform:uppercase}
+.page{display:none}.page.active{display:block}
+nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(safe-area-inset-bottom) + 8px);background:#07090dee;border-top:1px solid #1d2430;backdrop-filter:blur(20px);display:flex;justify-content:space-around}
+.navBtn{background:none;border:0;color:#707989;font-size:9px;font-weight:800;min-width:58px;padding:4px}.navBtn .ico{display:block;font-size:21px;margin-bottom:4px}.navBtn.active{color:#f6f8fb}
+.notice{font-size:12px;color:#a6afbd;background:#111722;border:1px solid #2b3442;border-radius:14px;padding:12px;margin-top:10px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}.actions{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header><div class="brand">MANOS DRIVE</div><div class="sub">VEHICLE INTELLIGENCE</div></header>
+<main>
+<section id="drive" class="page active">
+  <div class="hero">
+    <div class="heroInner">
+      <div class="eyebrow">Volkswagen Tiguan · 2008</div>
+      <h1 id="vehicleTitle">Tiguan 1.4 TSI</h1>
+      <p>4Motion · MANOS CAR HUB</p>
+      <div class="chips">
+        <span class="chip" id="hubChip"><i class="dot"></i>CAR HUB OFFLINE</span>
+        <span class="chip" id="obdChip"><i class="dot"></i>OBDII OFFLINE</span>
+        <span class="chip">APP 3.0</span>
+      </div>
+    </div>
+  </div>
+  <div class="sectionTitle">Live telemetry</div>
+  <div class="grid">
+    <div class="card"><div class="label">SPEED</div><div class="value" id="speed">--</div><div class="unit">km/h</div></div>
+    <div class="card"><div class="label">RPM</div><div class="value" id="rpm">--</div><div class="unit">rpm</div></div>
+    <div class="card"><div class="label">COOLANT</div><div class="value" id="coolant">--</div><div class="unit">°C</div></div>
+    <div class="card"><div class="label">VOLTAGE</div><div class="value" id="voltage">--</div><div class="unit">V</div></div>
+  </div>
+  <div class="sectionTitle">Last saved</div>
+  <div class="stats">
+    <div class="mini"><span>Last speed</span><b id="lastSpeed">--</b></div>
+    <div class="mini"><span>Last temp</span><b id="lastTemp">--</b></div>
+    <div class="mini"><span>Last voltage</span><b id="lastVolt">--</b></div>
+  </div>
+  <div class="panel"><h3 id="memoryTitle">Offline memory ready</h3><div class="muted" id="memoryInfo">Η εφαρμογή θα κρατά την τελευταία κατάσταση και το ιστορικό διαδρομών τοπικά στο iPhone.</div></div>
+</section>
+
+<section id="trips" class="page">
+  <div class="sectionTitle">Trip history</div>
+  <div class="stats">
+    <div class="mini"><span>Trips</span><b id="tripCount">0</b></div>
+    <div class="mini"><span>Distance</span><b id="totalKm">0</b></div>
+    <div class="mini"><span>Drive time</span><b id="totalTime">0m</b></div>
+  </div>
+  <div class="panel"><h3>Saved trips</h3><div id="tripList" class="muted">Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.</div></div>
+  <button class="btn full" onclick="shareLatest()">SHARE LATEST TRIP</button>
+</section>
+
+<section id="health" class="page">
+  <div class="sectionTitle">Vehicle health</div>
+  <div class="grid">
+    <div class="card"><div class="label">LAST COOLANT</div><div class="value" id="healthCoolant">--</div><div class="unit">°C</div></div>
+    <div class="card"><div class="label">LAST VOLTAGE</div><div class="value" id="healthVoltage">--</div><div class="unit">V</div></div>
+  </div>
+  <div class="panel"><h3>Health status</h3><div class="muted" id="healthText">Περιμένω δεδομένα από το Car Hub.</div></div>
+</section>
+
+<section id="updates" class="page">
+  <div class="sectionTitle">Car Hub updates</div>
+  <div class="panel"><h3>Firmware</h3><div class="muted" id="fwText">Current known firmware: --</div><div class="notice">Η εγκατάσταση firmware γίνεται τοπικά από το 192.168.4.1 όταν είσαι συνδεδεμένος στο MANOS-CAR.</div></div>
+</section>
+
+<section id="settings" class="page">
+  <div class="sectionTitle">Settings</div>
+  <div class="panel">
+    <label>Fuel price €/L</label><input id="fuelprice" type="number" step=".01">
+    <label>Coolant alert °C</label><input id="tempAlert" type="number" step="1">
+    <label>Voltage alert V</label><input id="voltAlert" type="number" step=".1">
+    <label>Report email</label><input id="reportEmail" type="email" placeholder="name@example.com">
+    <button class="btn primary full" onclick="saveSettings()">SAVE SETTINGS</button>
+    <div class="muted" style="margin-top:12px">Οι ρυθμίσεις αποθηκεύονται στο iPhone. Αυτόματο email χρειάζεται cloud mail service, οπότε δεν προσποιούμαστε ότι στέλνεται μόνο του. Το ιστορικό όμως παραμένει τοπικά.</div>
+  </div>
+  <div class="panel"><div class="muted">Vehicle image: Wikimedia Commons · Rudolf Stricker · CC BY-SA 3.0.</div></div>
+</section>
+</main>
+
+<nav>
+<button class="navBtn active" data-page="drive" onclick="showPage('drive',this)"><span class="ico">⌁</span>DRIVE</button>
+<button class="navBtn" data-page="trips" onclick="showPage('trips',this)"><span class="ico">↗</span>TRIPS</button>
+<button class="navBtn" data-page="health" onclick="showPage('health',this)"><span class="ico">◇</span>HEALTH</button>
+<button class="navBtn" data-page="updates" onclick="showPage('updates',this)"><span class="ico">⇩</span>UPDATES</button>
+<button class="navBtn" data-page="settings" onclick="showPage('settings',this)"><span class="ico">⚙</span>SETTINGS</button>
+</nav>
+
+<script>
+const HUB='http://192.168.4.1', KEY='manosDriveStateV3', $=id=>document.getElementById(id);
+let store={settings:{fuelprice:'1.80',tempAlert:'105',voltAlert:'11.8',reportEmail:''},lastVehicle:null,trips:[],pending:[]};
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x)store={...store,...x,settings:{...store.settings,...(x.settings||{})}}}catch(e){};renderLocal()}
 function persist(){localStorage.setItem(KEY,JSON.stringify(store))}
-function go(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active')}
-function log(x){$('log').textContent=new Date().toLocaleTimeString()+'  '+x+'\n'+$('log').textContent}
-function loadLocal(){for(const k of ['fuelprice','tempAlert','voltAlert'])$(k).value=store.settings[k]||'';renderLast();renderPending()}
-function saveSettings(){store.settings={fuelprice:$('fuelprice').value,tempAlert:$('tempAlert').value,voltAlert:$('voltAlert').value};store.pending=store.pending.filter(x=>x.type!=='settings');store.pending.push({type:'settings',data:store.settings,at:Date.now()});persist();renderPending();log('Settings saved offline')}
-function renderPending(){$('pending').textContent=store.pending.length?store.pending.length+' αλλαγή σε αναμονή για Car Hub sync.':'Όλες οι τοπικές αλλαγές αποθηκεύτηκαν.'}
-function renderLast(){if(!store.lastVehicle)return;const s=store.lastVehicle;$('lastSeen').textContent='Τελευταία σύνδεση: '+new Date(s.savedAt).toLocaleString('el-GR');$('lastData').textContent='Speed '+s.speed+' km/h · RPM '+s.rpm+' · Coolant '+s.coolant+' °C · Voltage '+s.voltage+' V'}
+function showPage(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.navBtn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active')}
+function renderLocal(){
+  const s=store.settings; $('fuelprice').value=s.fuelprice;$('tempAlert').value=s.tempAlert;$('voltAlert').value=s.voltAlert;$('reportEmail').value=s.reportEmail||'';
+  const v=store.lastVehicle;
+  if(v){$('lastSpeed').textContent=(v.speed??0)+' km/h';$('lastTemp').textContent=(v.coolant??0)+'°';$('lastVolt').textContent=(v.voltage??0)+'V';$('healthCoolant').textContent=v.coolant??'--';$('healthVoltage').textContent=v.voltage??'--';$('memoryTitle').textContent='Last vehicle data saved';$('memoryInfo').textContent='Τελευταία ενημέρωση: '+new Date(v.savedAt).toLocaleString('el-GR');healthCheck(v)}
+  renderTrips()
+}
+function healthCheck(v){let m='Οι τελευταίες αποθηκευμένες ενδείξεις είναι εντός των ορίων που έχεις ορίσει.';if(Number(v.coolant)>=Number(store.settings.tempAlert))m='Προσοχή: η τελευταία θερμοκρασία ψυκτικού ήταν πάνω από το όριο.';if(Number(v.voltage)>0&&Number(v.voltage)<=Number(store.settings.voltAlert))m='Προσοχή: η τελευταία τάση ήταν χαμηλή.';$('healthText').textContent=m}
+function renderTrips(){const t=store.trips||[];$('tripCount').textContent=t.length;$('totalKm').textContent=t.reduce((a,x)=>a+Number(x.distance||0),0).toFixed(1)+' km';const mins=Math.round(t.reduce((a,x)=>a+Number(x.durationSec||0),0)/60);$('totalTime').textContent=mins+'m';$('tripList').innerHTML=t.length?t.slice().reverse().map(x=>'<div class="trip"><div class="tripTop"><strong>'+new Date(x.endedAt||x.savedAt||Date.now()).toLocaleString('el-GR')+'</strong><small>'+Number(x.distance||0).toFixed(1)+' km</small></div><div class="muted">Max '+Math.round(x.maxSpeed||0)+' km/h · Avg '+Math.round(x.avgSpeed||0)+' km/h · Temp '+Math.round(x.maxCoolant||0)+'°C</div></div>').join(''):'Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.'}
+function saveSettings(){store.settings={fuelprice:$('fuelprice').value,tempAlert:$('tempAlert').value,voltAlert:$('voltAlert').value,reportEmail:$('reportEmail').value};persist();renderLocal()}
 async function api(path,method='GET',body){const r=await fetch(HUB+path,{method,body,cache:'no-store'});if(!r.ok)throw Error(r.status);const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r.text()}
-function setOffline(){online=false;$('dot').classList.remove('on');$('vehicleState').textContent='Vehicle offline';$('hubChip').textContent='CAR HUB OFFLINE';$('obdChip').textContent='OBDII OFFLINE';$('syncChip').textContent=store.pending.length?'SYNC PENDING':'OFFLINE MEMORY READY';['speed','rpm','coolant','voltage'].forEach(k=>$(k).textContent='--');lastLogOnline=false}
-function render(s){online=true;$('dot').classList.add('on');$('vehicleState').textContent='Vehicle connected';$('hubChip').textContent='CAR HUB ONLINE';$('obdChip').textContent=s.obd_connected?'OBDII CONNECTED':'OBDII '+(s.obd_state||'OFFLINE');$('obdState').textContent=s.obd_state||'Not connected';$('updateInfo').textContent='Current Car Hub firmware: '+s.version;for(const k of ['speed','rpm','coolant','voltage'])if(s[k]!==undefined)$(k).textContent=s[k];store.lastVehicle={speed:s.speed??0,rpm:s.rpm??0,coolant:s.coolant??0,voltage:s.voltage??0,savedAt:Date.now()};persist();renderLast();$('syncChip').textContent=store.pending.length?'SYNC PENDING':'SYNCED'}
-async function connectHub(){try{const s=await api('/api/status');render(s);if(!lastLogOnline){log('Car Hub connected');lastLogOnline=true}}catch(e){setOffline()}}
-async function scanOBD(){try{await api('/api/obd/scan','POST');$('obdState').textContent='Scanning Bluetooth…';setTimeout(loadDevices,11000)}catch(e){$('obdState').textContent='Car Hub offline'}}
-async function loadDevices(){try{const ds=await api('/api/obd/devices');$('devices').innerHTML=ds.map(d=>'<div class="trip"><b>'+(d.name||'Unknown')+'</b><div class="muted">'+(d.address||'')+' · RSSI '+(d.rssi??'')+'</div></div>').join('')||'<div class="muted">No devices found.</div>'}catch(e){}}
-async function uploadFirmware(){const f=$('fw').files[0];if(!f){$('upmsg').textContent='Διάλεξε πρώτα .bin firmware.';return}const fd=new FormData();fd.append('firmware',f);$('upmsg').textContent='Uploading… Μην κόψεις το ρεύμα.';try{await api('/update','POST',fd);$('upmsg').textContent='Update sent. Car Hub restarting.'}catch(e){$('upmsg').textContent='Car Hub offline.'}}
-loadLocal();setOffline();setInterval(connectHub,3000);connectHub();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
-</script></body></html>
+function offline(){ $('hubChip').classList.remove('on');$('hubChip').innerHTML='<i class="dot"></i>CAR HUB OFFLINE';$('obdChip').classList.remove('on');$('obdChip').innerHTML='<i class="dot"></i>OBDII OFFLINE';['speed','rpm','coolant','voltage'].forEach(k=>$(k).textContent='--') }
+function renderLive(s){$('hubChip').classList.add('on');$('hubChip').innerHTML='<i class="dot"></i>CAR HUB ONLINE';$('obdChip').classList.toggle('on',!!s.obd_connected);$('obdChip').innerHTML='<i class="dot"></i>'+(s.obd_connected?'OBDII CONNECTED':'OBDII '+(s.obd_state||'OFFLINE'));for(const k of ['speed','rpm','coolant','voltage'])if(s[k]!==undefined)$(k).textContent=s[k];$('fwText').textContent='Current Car Hub firmware: '+(s.version||'--');store.lastVehicle={speed:s.speed??0,rpm:s.rpm??0,coolant:s.coolant??0,voltage:s.voltage??0,savedAt:Date.now()};persist();renderLocal()}
+async function sync(){try{const s=await api('/api/status');renderLive(s);try{const trips=await api('/api/trips');if(Array.isArray(trips)&&trips.length){store.trips=trips;persist();renderTrips()}}catch(e){}}catch(e){offline()}}
+async function shareLatest(){const x=(store.trips||[]).slice(-1)[0];if(!x)return;const text='MANOS DRIVE Trip\n'+new Date(x.endedAt||Date.now()).toLocaleString('el-GR')+'\nDistance: '+Number(x.distance||0).toFixed(1)+' km\nAvg: '+Math.round(x.avgSpeed||0)+' km/h\nMax: '+Math.round(x.maxSpeed||0)+' km/h\nMax coolant: '+Math.round(x.maxCoolant||0)+'°C';if(navigator.share)await navigator.share({title:'MANOS DRIVE Trip',text});else navigator.clipboard?.writeText(text)}
+load();offline();sync();setInterval(sync,4000);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+</script>
+</body></html>
