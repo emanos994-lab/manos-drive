@@ -9,8 +9,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>MANOS DRIVE</title>
 <style>
-:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f6f8fb;background:#06080c;--panel:#10141c;--line:#242b38;--muted:#8d96a6;--accent:#e9eef7}
-*{box-sizing:border-box}html,body{margin:0;background:#06080c;color:#f6f8fb;min-height:100%}body{padding-bottom:92px}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f6f8fb;background:#06080c;--panel:#0d1420;--line:#213149;--muted:#8d9aab;--accent:#35a7ff;--accent2:#6ad5ff;--danger:#ff4d67}
+*{box-sizing:border-box}html,body{margin:0;background:radial-gradient(circle at 80% -10%,#0d3558 0,#08111c 28%,#06080c 62%);color:#f6f8fb;min-height:100%}body{padding-bottom:92px}
 header{position:sticky;top:0;z-index:20;padding:calc(env(safe-area-inset-top) + 14px) 20px 14px;background:#06080ce8;backdrop-filter:blur(18px);border-bottom:1px solid #171c25}
 .brand{font-size:25px;font-weight:950;letter-spacing:4px}.sub{font-size:10px;letter-spacing:4px;color:#737d8f;margin-top:3px}
 main{max-width:820px;margin:auto;padding:18px}
@@ -19,7 +19,7 @@ main{max-width:820px;margin:auto;padding:18px}
 .heroInner{position:relative;z-index:2;padding:27px 24px;display:flex;flex-direction:column;min-height:270px;justify-content:flex-end}
 .eyebrow{font-size:11px;letter-spacing:3px;color:#9aa3b2;text-transform:uppercase}.hero h1{margin:8px 0 5px;font-size:34px;line-height:1}.hero p{margin:0;color:#a4adbb;font-size:13px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .chip{border:1px solid #333c4c;background:#111721cc;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:750;color:#b8c0cd}
-.chip.on{color:#f7f9fc;border-color:#536071;box-shadow:inset 0 0 0 1px #ffffff0d}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#5b6270;margin-right:7px}.on .dot{background:#dfe7f3;box-shadow:0 0 12px #dfe7f3}
+.chip.on{color:#eaf7ff;border-color:#2c8ed2;background:#0d2940cc;box-shadow:0 0 18px #249fe233}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#5b6270;margin-right:7px}.on .dot{background:var(--accent2);box-shadow:0 0 14px var(--accent2)}
 .sectionTitle{margin:24px 4px 11px;font-size:11px;letter-spacing:3px;color:#858e9e;text-transform:uppercase}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.card{background:linear-gradient(145deg,#121722,#0d1118);border:1px solid var(--line);border-radius:23px;padding:17px;min-height:142px}
 .card .label{font-size:10px;letter-spacing:2px;color:#8e97a7}.value{font-weight:900;font-size:36px;margin-top:22px;letter-spacing:-1px}.unit{font-size:12px;color:#7d8798;margin-top:3px}
@@ -33,6 +33,14 @@ label{font-size:10px;color:#8a94a4;letter-spacing:1px;text-transform:uppercase}
 nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(safe-area-inset-bottom) + 8px);background:#07090dee;border-top:1px solid #1d2430;backdrop-filter:blur(20px);display:flex;justify-content:space-around}
 .navBtn{background:none;border:0;color:#707989;font-size:9px;font-weight:800;min-width:58px;padding:4px}.navBtn .ico{display:block;font-size:21px;margin-bottom:4px}.navBtn.active{color:#f6f8fb}
 .notice{font-size:12px;color:#a6afbd;background:#111722;border:1px solid #2b3442;border-radius:14px;padding:12px;margin-top:10px}
+.mapWrap{position:relative;overflow:hidden;border-radius:24px;border:1px solid #27405d;background:#07111c;min-height:285px;box-shadow:0 14px 40px #0007}
+.mapWrap iframe{width:100%;height:285px;border:0;display:block;filter:saturate(.9) contrast(1.05)}
+.mapOverlay{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.mapBadge{background:#07111ddd;border:1px solid #2b4765;backdrop-filter:blur(12px);border-radius:999px;padding:9px 11px;font-size:10px;font-weight:800;color:#d8efff}
+.gpsDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6ad5ff;box-shadow:0 0 12px #6ad5ff;margin-right:6px}
+.mapActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.btn.blue{background:linear-gradient(135deg,#168bd4,#42b9ff);color:white;border-color:#4cbfff;box-shadow:0 10px 28px #0a8ed433}
+.btn.danger{border-color:#683040;color:#ffdbe1;background:#2b1118}
 @media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}.actions{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
@@ -48,7 +56,7 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
       <div class="chips">
         <span class="chip" id="hubChip"><i class="dot"></i>CAR HUB OFFLINE</span>
         <span class="chip" id="obdChip"><i class="dot"></i>OBDII OFFLINE</span>
-        <span class="chip">APP 3.0</span>
+        <span class="chip">APP 3.1</span>
       </div>
     </div>
   </div>
@@ -59,6 +67,19 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
     <div class="card"><div class="label">COOLANT</div><div class="value" id="coolant">--</div><div class="unit">°C</div></div>
     <div class="card"><div class="label">VOLTAGE</div><div class="value" id="voltage">--</div><div class="unit">V</div></div>
   </div>
+  <div class="sectionTitle">Live position</div>
+  <div class="mapWrap">
+    <iframe id="mapFrame" title="Live map" loading="lazy"></iframe>
+    <div class="mapOverlay">
+      <span class="mapBadge" id="gpsState"><span class="gpsDot"></span>GPS WAITING</span>
+      <span class="mapBadge" id="gpsAccuracy">-- m</span>
+    </div>
+  </div>
+  <div class="mapActions">
+    <button class="btn blue" id="trackBtn" onclick="startGpsTrack()">START GPS TRIP</button>
+    <button class="btn danger" id="stopBtn" onclick="stopGpsTrack()" disabled>STOP & SAVE</button>
+  </div>
+  <div class="notice" id="gpsInfo">Το live στίγμα χρησιμοποιεί το GPS του iPhone. Η καταγραφή λειτουργεί όσο η MANOS DRIVE παραμένει ενεργή.</div>
   <div class="sectionTitle">Last saved</div>
   <div class="stats">
     <div class="mini"><span>Last speed</span><b id="lastSpeed">--</b></div>
@@ -76,7 +97,7 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
     <div class="mini"><span>Drive time</span><b id="totalTime">0m</b></div>
   </div>
   <div class="panel"><h3>Saved trips</h3><div id="tripList" class="muted">Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.</div></div>
-  <button class="btn full" onclick="shareLatest()">SHARE LATEST TRIP</button>
+  <div class="actions" style="margin-top:10px"><button class="btn" onclick="openLatestMap()">OPEN LATEST IN GOOGLE MAPS</button><button class="btn" onclick="shareLatest()">SHARE LATEST TRIP</button></div>
 </section>
 
 <section id="health" class="page">
@@ -117,7 +138,8 @@ nav{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:10px 8px calc(env(
 
 <script>
 const HUB='http://192.168.4.1', KEY='manosDriveStateV3', $=id=>document.getElementById(id);
-let store={settings:{fuelprice:'1.80',tempAlert:'105',voltAlert:'11.8',reportEmail:''},lastVehicle:null,trips:[],pending:[]};
+let store={settings:{fuelprice:'1.80',tempAlert:'105',voltAlert:'11.8',reportEmail:''},lastVehicle:null,trips:[],pending:[],gpsTrack:null};
+let geoWatch=null,lastMapUpdate=0;
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x)store={...store,...x,settings:{...store.settings,...(x.settings||{})}}}catch(e){};renderLocal()}
 function persist(){localStorage.setItem(KEY,JSON.stringify(store))}
 function showPage(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.navBtn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active')}
@@ -128,13 +150,51 @@ function renderLocal(){
   renderTrips()
 }
 function healthCheck(v){let m='Οι τελευταίες αποθηκευμένες ενδείξεις είναι εντός των ορίων που έχεις ορίσει.';if(Number(v.coolant)>=Number(store.settings.tempAlert))m='Προσοχή: η τελευταία θερμοκρασία ψυκτικού ήταν πάνω από το όριο.';if(Number(v.voltage)>0&&Number(v.voltage)<=Number(store.settings.voltAlert))m='Προσοχή: η τελευταία τάση ήταν χαμηλή.';$('healthText').textContent=m}
-function renderTrips(){const t=store.trips||[];$('tripCount').textContent=t.length;$('totalKm').textContent=t.reduce((a,x)=>a+Number(x.distance||0),0).toFixed(1)+' km';const mins=Math.round(t.reduce((a,x)=>a+Number(x.durationSec||0),0)/60);$('totalTime').textContent=mins+'m';$('tripList').innerHTML=t.length?t.slice().reverse().map(x=>'<div class="trip"><div class="tripTop"><strong>'+new Date(x.endedAt||x.savedAt||Date.now()).toLocaleString('el-GR')+'</strong><small>'+Number(x.distance||0).toFixed(1)+' km</small></div><div class="muted">Max '+Math.round(x.maxSpeed||0)+' km/h · Avg '+Math.round(x.avgSpeed||0)+' km/h · Temp '+Math.round(x.maxCoolant||0)+'°C</div></div>').join(''):'Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.'}
+function renderTrips(){const t=store.trips||[];$('tripCount').textContent=t.length;$('totalKm').textContent=t.reduce((a,x)=>a+Number(x.distance||0),0).toFixed(1)+' km';const mins=Math.round(t.reduce((a,x)=>a+Number(x.durationSec||0),0)/60);$('totalTime').textContent=mins+'m';$('tripList').innerHTML=t.length?t.slice().reverse().map((x,i)=>'<div class="trip"><div class="tripTop"><strong>'+new Date(x.endedAt||x.savedAt||Date.now()).toLocaleString('el-GR')+'</strong><small>'+Number(x.distance||0).toFixed(1)+' km</small></div><div class="muted">'+(x.source==='gps'?'GPS route · ':'')+'Max '+Math.round(x.maxSpeed||0)+' km/h · Avg '+Math.round(x.avgSpeed||0)+' km/h · Temp '+Math.round(x.maxCoolant||0)+'°C</div>'+(x.points&&x.points.length?'<button class="btn" style="margin-top:9px" onclick="openTripMap(store.trips['+(t.length-1-i)+'])">MAP</button>':'')+'</div>').join(''):'Δεν υπάρχουν αποθηκευμένες διαδρομές ακόμα.'}
+
+function haversine(a,b){const R=6371,toRad=x=>x*Math.PI/180,dLat=toRad(b.lat-a.lat),dLon=toRad(b.lng-a.lng),la1=toRad(a.lat),la2=toRad(b.lat);const q=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+function updateMap(lat,lng,acc){
+  const now=Date.now(); if(now-lastMapUpdate<7000)return; lastMapUpdate=now;
+  $('mapFrame').src='https://www.google.com/maps?q='+lat+','+lng+'&z=16&output=embed';
+  $('gpsState').innerHTML='<span class="gpsDot"></span>GPS LIVE';
+  $('gpsAccuracy').textContent=Math.round(acc||0)+' m';
+}
+function onGeo(pos){
+  const p={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy,ts:Date.now()};
+  updateMap(p.lat,p.lng,p.acc);
+  if(store.gpsTrack){
+    const pts=store.gpsTrack.points||[],last=pts[pts.length-1];
+    if(!last||haversine(last,p)>=0.01){pts.push(p);store.gpsTrack.points=pts;persist();$('gpsInfo').textContent='GPS trip recording · '+pts.length+' σημεία αποθηκευμένα';}
+  }
+}
+function geoError(e){$('gpsState').textContent='GPS UNAVAILABLE';$('gpsInfo').textContent='Δεν υπάρχει άδεια τοποθεσίας. Άνοιξε την πρόσβαση τοποθεσίας για τη MANOS DRIVE.'}
+function ensureGeo(){if(!navigator.geolocation){geoError();return}if(geoWatch===null)geoWatch=navigator.geolocation.watchPosition(onGeo,geoError,{enableHighAccuracy:true,maximumAge:3000,timeout:12000})}
+function startGpsTrack(){
+  ensureGeo(); if(store.gpsTrack)return;
+  store.gpsTrack={startedAt:Date.now(),points:[]};persist();
+  $('trackBtn').disabled=true;$('stopBtn').disabled=false;$('gpsInfo').textContent='GPS trip recording ξεκίνησε…';
+}
+function stopGpsTrack(){
+  const g=store.gpsTrack;if(!g)return;const pts=g.points||[];
+  let dist=0;for(let i=1;i<pts.length;i++)dist+=haversine(pts[i-1],pts[i]);
+  const trip={source:'gps',startedAt:g.startedAt,endedAt:Date.now(),savedAt:Date.now(),distance:dist,durationSec:Math.round((Date.now()-g.startedAt)/1000),maxSpeed:0,avgSpeed:0,maxCoolant:0,points:pts};
+  store.trips.push(trip);store.gpsTrack=null;persist();renderTrips();
+  $('trackBtn').disabled=false;$('stopBtn').disabled=true;$('gpsInfo').textContent='GPS trip αποθηκεύτηκε τοπικά στο iPhone · '+dist.toFixed(1)+' km';
+}
+function openTripMap(x){
+  if(!x||!x.points||!x.points.length)return;
+  const pts=x.points,first=pts[0],last=pts[pts.length-1];
+  let u='https://www.google.com/maps/dir/?api=1&origin='+first.lat+','+first.lng+'&destination='+last.lat+','+last.lng+'&travelmode=driving';
+  window.open(u,'_blank');
+}
+function openLatestMap(){const x=(store.trips||[]).slice().reverse().find(t=>t.points&&t.points.length);if(x)openTripMap(x)}
+
 function saveSettings(){store.settings={fuelprice:$('fuelprice').value,tempAlert:$('tempAlert').value,voltAlert:$('voltAlert').value,reportEmail:$('reportEmail').value};persist();renderLocal()}
 async function api(path,method='GET',body){const r=await fetch(HUB+path,{method,body,cache:'no-store'});if(!r.ok)throw Error(r.status);const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r.text()}
 function offline(){ $('hubChip').classList.remove('on');$('hubChip').innerHTML='<i class="dot"></i>CAR HUB OFFLINE';$('obdChip').classList.remove('on');$('obdChip').innerHTML='<i class="dot"></i>OBDII OFFLINE';['speed','rpm','coolant','voltage'].forEach(k=>$(k).textContent='--') }
 function renderLive(s){$('hubChip').classList.add('on');$('hubChip').innerHTML='<i class="dot"></i>CAR HUB ONLINE';$('obdChip').classList.toggle('on',!!s.obd_connected);$('obdChip').innerHTML='<i class="dot"></i>'+(s.obd_connected?'OBDII CONNECTED':'OBDII '+(s.obd_state||'OFFLINE'));for(const k of ['speed','rpm','coolant','voltage'])if(s[k]!==undefined)$(k).textContent=s[k];$('fwText').textContent='Current Car Hub firmware: '+(s.version||'--');store.lastVehicle={speed:s.speed??0,rpm:s.rpm??0,coolant:s.coolant??0,voltage:s.voltage??0,savedAt:Date.now()};persist();renderLocal()}
 async function sync(){try{const s=await api('/api/status');renderLive(s);try{const trips=await api('/api/trips');if(Array.isArray(trips)&&trips.length){store.trips=trips;persist();renderTrips()}}catch(e){}}catch(e){offline()}}
 async function shareLatest(){const x=(store.trips||[]).slice(-1)[0];if(!x)return;const text='MANOS DRIVE Trip\n'+new Date(x.endedAt||Date.now()).toLocaleString('el-GR')+'\nDistance: '+Number(x.distance||0).toFixed(1)+' km\nAvg: '+Math.round(x.avgSpeed||0)+' km/h\nMax: '+Math.round(x.maxSpeed||0)+' km/h\nMax coolant: '+Math.round(x.maxCoolant||0)+'°C';if(navigator.share)await navigator.share({title:'MANOS DRIVE Trip',text});else navigator.clipboard?.writeText(text)}
-load();offline();sync();setInterval(sync,4000);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+load();offline();ensureGeo();if(store.gpsTrack){$('trackBtn').disabled=true;$('stopBtn').disabled=false;$('gpsInfo').textContent='GPS trip recording συνεχίζεται όσο η εφαρμογή είναι ενεργή.'}sync();setInterval(sync,4000);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 </script>
 </body></html>
