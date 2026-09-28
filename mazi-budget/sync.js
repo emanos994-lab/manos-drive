@@ -47,4 +47,33 @@ async function pull(initial=false){
   if(!bound()&&meaningful()){
     showModal('Υπάρχουν ήδη κοινά δεδομένα','<div class="notice">Το Google cloud έχει ήδη δεδομένα. Για ασφάλεια θα φορτώσουμε την κοινή έκδοση σε αυτή τη συσκευή.</div>',()=>{setTimeout(()=>applyRemote(remote,v),80)},'Χρήση cloud');
   }else applyRemote(remote,v);
- }catch(e){console.error(e);setStatus('error',String(e?.message||'').i
+ }catch(e){console.error(e);setStatus('error',String(e?.message||'').includes('Unauthorized')?'Κωδικός':'⚠ Sync')}
+ finally{busy=false}
+}
+async function push(force=false){
+ if(!secret()||(!bound()&&!force)||busy)return;
+ if(!navigator.onLine){set(K.dirty,1);refresh();return}
+ busy=true;setStatus('working','Sync…');
+ const snap=structuredClone(state);
+ try{
+  const res=await call({action:'push',auth:await auth(),payload:await enc(snap),updatedBy:actor(),deviceId:device(),clientVersion:version()});
+  if(!res?.ok){
+    if(res?.conflict){localStorage.setItem('mazi-sync-conflict-backup',JSON.stringify(snap));set(K.version,res.serverVersion||0);set(K.dirty,0);alert('Υπήρξε ταυτόχρονη αλλαγή από άλλη συσκευή. Κράτησα αντίγραφο ασφαλείας και θα φορτώσω την κοινή έκδοση.');await pull(false);return}
+    throw new Error(res?.error||'push');
+  }
+  set(K.version,res.version);set(K.bound,1);set(K.dirty,0);setStatus('synced','✓ Sync');
+ }catch(e){console.error(e);set(K.dirty,1);setStatus(navigator.onLine?'error':'offline',navigator.onLine?'⚠ Sync':'Offline')}
+ finally{busy=false}
+}
+function firstUploadPrompt(){
+ if(window.__maziFirstPrompt)return;window.__maziFirstPrompt=true;
+ const warn=!meaningful()?'<div class="warning notice" style="margin-top:12px">Αυτή η συσκευή φαίνεται άδεια. Αν τα σωστά ποσά είναι στο iPhone, κάνε την πρώτη σύνδεση από εκεί.</div>':'';
+ showModal('Πρώτος συγχρονισμός','<div class="notice"><strong>Το κοινό cloud είναι άδειο.</strong><br><br>Η πρώτη συσκευή πρέπει να είναι αυτή που έχει τη σωστή σημερινή εικόνα.</div>'+warn,()=>{setTimeout(()=>push(true),100)},'Ανέβασμα αυτής της συσκευής');
+}
+function settings(){
+ const has=!!secret(),a=actor();
+ showModal('Κοινός συγχρονισμός','<div class="notice">Τα οικονομικά ανεβαίνουν κρυπτογραφημένα. Ο κοινός κωδικός μένει μόνο σε αυτή τη συσκευή.</div><div class="form-grid" style="margin-top:14px"><div class="field"><label>Χρήστης</label><select name="actor"><option value="Μάνος" '+(a==='Μάνος'?'selected':'')+'>Μάνος</option><option value="Πένυ" '+(a==='Πένυ'?'selected':'')+'>Πένυ</option></select></div><div class="field"><label>Κοινός κωδικός sync</label><input name="secret" type="password" '+(has?'':'required')+' placeholder="'+(has?'Άφησέ το κενό για να μείνει ίδιο':'Βάλε το MAZI_SYNC_SECRET')+'"></div></div>',fd=>{const n=String(fd.get('secret')||'').trim();set(K.actor,fd.get('actor')||'Μάνος');if(n&&n!==secret()){set(K.secret,n);set(K.bound,0);set(K.dirty,0);set(K.version,0)}setTimeout(()=>pull(true),100)},has?'Αποθήκευση & συγχρονισμός':'Σύνδεση');
+}
+window.maziSyncChanged=()=>{if(!secret()||!bound())return;set(K.dirty,1);refresh();clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),900)};
+window.initMaziSync=()=>{bridge();refresh();const b=document.getElementById('syncStatusButton');if(b)b.onclick=settings;window.addEventListener('online',()=>dirty()&&bound()?push(false):pull(false));window.addEventListener('offline',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&secret()){dirty()&&bound()?push(false):pull(false)}});clearInterval(pullTimer);pullTimer=setInterval(()=>{if(secret()&&!document.hidden){dirty()&&bound()?push(false):pull(false)}},15000);if(secret())pull(true)};
+})();
