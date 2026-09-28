@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Μαζί" />
   <link rel="manifest" href="manifest.webmanifest" />
   
-  <title>Μαζί — Οικονομικά v3.3</title>
+  <title>Μαζί — Οικονομικά v3.4</title>
   <style>
 :root{
   --bg:#09111f; --panel:#101a2c; --panel2:#152238; --soft:#1d2c46; --text:#f5f7fb; --muted:#8fa3bf;
@@ -19,7 +19,15 @@
 }
 *{box-sizing:border-box} html,body{margin:0;background:linear-gradient(180deg,#08111d 0%,#0b1526 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100%}
 body{padding-bottom:92px}.app-shell{max-width:1180px;margin:0 auto;min-height:100vh}.topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:20px 20px 14px;background:linear-gradient(180deg,rgba(9,17,31,.98),rgba(9,17,31,.86),rgba(9,17,31,0));backdrop-filter:blur(10px)}
-.eyebrow{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.topbar h1{margin:2px 0 0;font-size:29px}.top-actions{display:flex;gap:10px}.icon-btn,.avatar{border:1px solid var(--border);background:var(--panel2);color:var(--text);width:42px;height:42px;border-radius:14px;font-weight:800;cursor:pointer}.avatar{background:linear-gradient(135deg,var(--blue),#b9f0ff);color:#0a1830}
+.eyebrow{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sync-status-btn{height:42px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:14px;padding:0 11px;display:flex;align-items:center;gap:7px;font-weight:800;cursor:pointer;font-size:12px;white-space:nowrap}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#a8b3c2;display:inline-block;box-shadow:0 0 0 3px rgba(168,179,194,.12)}
+.sync-status-btn[data-state="synced"] .sync-dot{background:#2f8f6b;box-shadow:0 0 0 3px rgba(47,143,107,.12)}
+.sync-status-btn[data-state="working"] .sync-dot,.sync-status-btn[data-state="pending"] .sync-dot{background:#bd8136;box-shadow:0 0 0 3px rgba(189,129,54,.12)}
+.sync-status-btn[data-state="error"] .sync-dot,.sync-status-btn[data-state="offline"] .sync-dot{background:#c95f70;box-shadow:0 0 0 3px rgba(201,95,112,.12)}
+#syncBridgeFrame{position:fixed!important;width:1px!important;height:1px!important;left:-10000px!important;top:-10000px!important;border:0!important;opacity:0!important;pointer-events:none!important}
+@media(max-width:560px){.sync-status-btn{width:42px;padding:0;justify-content:center}.sync-status-btn #syncStatusText{display:none}}
+.topbar h1{margin:2px 0 0;font-size:29px}.top-actions{display:flex;gap:10px}.icon-btn,.avatar{border:1px solid var(--border);background:var(--panel2);color:var(--text);width:42px;height:42px;border-radius:14px;font-weight:800;cursor:pointer}.avatar{background:linear-gradient(135deg,var(--blue),#b9f0ff);color:#0a1830}
 main{padding:0 18px 24px}.grid{display:grid;gap:14px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{background:linear-gradient(180deg,var(--panel),#0e1829);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
 .card h3,.card h4{margin:0 0 10px}.muted{color:var(--muted)}.big{font-size:34px;font-weight:850;letter-spacing:-.03em}.amount-pos{color:var(--green)}.amount-neg{color:var(--red)}.amount-warn{color:var(--orange)}
 .hero{padding:22px;background:radial-gradient(circle at top right,rgba(199,227,255,.18),transparent 38%),linear-gradient(180deg,var(--panel),#0e1829)}.hero-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.badge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 10px;background:var(--soft);color:#c7d4e7;font-size:12px;font-weight:700}.badge.green{background:rgba(40,194,122,.12);color:#70e2aa}.badge.orange{background:rgba(255,173,77,.12);color:#ffc778}.badge.red{background:rgba(255,94,115,.12);color:#ff9aaa}.badge.blue{background:rgba(199,227,255,.13);color:#edf7ff}
@@ -84,6 +92,7 @@ main{padding:0 18px 24px}.grid{display:grid;gap:14px}.grid-2{grid-template-colum
         <h1 id="screenTitle">Αρχική</h1>
       </div>
       <div class="top-actions">
+        <button class="sync-status-btn" id="syncStatusButton" type="button" title="Κοινός συγχρονισμός"><span class="sync-dot"></span><span id="syncStatusText">Σύνδεση</span></button>
         <button class="icon-btn" id="btnQuickAdd" title="Γρήγορη προσθήκη">＋</button>
         <button class="icon-btn" id="btnDashboardCustomize" title="Προσαρμογή αρχικής">⚙</button>
         <button class="avatar">Μ</button>
@@ -193,7 +202,7 @@ if(Number(state.dashboard.presetVersion||0)<2){
 let screen='home'; let expenseFilter='all';
 function load(){try{const s=JSON.parse(localStorage.getItem(storeKey));return s?deepMerge(structuredClone(defaults),s):structuredClone(defaults)}catch{return structuredClone(defaults)}}
 function deepMerge(base,override){if(Array.isArray(base))return Array.isArray(override)?override:base;if(base&&typeof base==='object'){for(const k of Object.keys(base)){if(override?.[k]!==undefined)base[k]=deepMerge(base[k],override[k])}for(const k of Object.keys(override||{})){if(base[k]===undefined)base[k]=override[k]}return base}return override??base}
-function save(){localStorage.setItem(storeKey,JSON.stringify(state));}
+function save(){localStorage.setItem(storeKey,JSON.stringify(state));if(window.maziSyncChanged)window.maziSyncChanged();}
 function wallet(id){return state.wallets.find(w=>w.id===id)}
 function availableNow(){return state.wallets.reduce((s,w)=>s+Number(w.balance||0),0)}
 function totalExpectedIncome(){return state.incomes.reduce((s,i)=>s+Number(i.amount||0),0)}
@@ -589,6 +598,8 @@ function quickAdd(){
 render();
 
 </script>
+<script src="./sync.js"></script>
+<script>if(window.initMaziSync)window.initMaziSync();</script>
 
 <script>
 if ('serviceWorker' in navigator) {
