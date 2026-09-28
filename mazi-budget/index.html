@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Μαζί" />
   <link rel="manifest" href="manifest.webmanifest" />
   
-  <title>Μαζί — Οικονομικά v3.4</title>
+  <title>Μαζί — Οικονομικά v3.5</title>
   <style>
 :root{
   --bg:#09111f; --panel:#101a2c; --panel2:#152238; --soft:#1d2c46; --text:#f5f7fb; --muted:#8fa3bf;
@@ -402,7 +402,7 @@ function editExpense(e){
  showModal(isNew?'Νέο έξοδο':'Επεξεργασία εξόδου',`<div class="form-grid">
    <div class="field"><label>Περιγραφή</label><input name="name" required value="${esc(e.name)}"></div>
    <div class="field"><label>Συνολικό budget</label><input name="actual" type="number" min="0" step="0.01" required value="${totalNow}"></div>
-   <div class="field"><label>Έχουν ήδη ξοδευτεί</label><input type="text" value="${euro(spentNow)}" readonly></div>
+   <div class="field"><label>Έχουν ήδη ξοδευτεί</label><input name="spentCorrection" type="number" min="0" step="0.01" value="${spentNow}"></div>
    <div class="field"><label>Μένουν</label><input type="text" id="remainingReadonly" value="${euro(remainingNow)}" readonly></div>
    <div class="field"><label>Νέα κίνηση τώρα</label><input name="newSpend" type="number" min="0" step="0.01" value="0" placeholder="π.χ. 80"></div>
    <div class="field"><label>Κατηγορία</label><input name="category" value="${esc(e.category||'Άλλο')}"></div>
@@ -416,25 +416,27 @@ function editExpense(e){
    const oldSpent=spentAmount(e);
    const total=Math.max(0,Number(fd.get('actual')||0));
    const selectedStatus=fd.get('status');
+   let correctedSpent=Math.max(0,Number(fd.get('spentCorrection')||0));
    let newSpend=Math.max(0,Number(fd.get('newSpend')||0));
    const newWallet=fd.get('wallet')||'mbank';
 
-   if(total<oldSpent-0.001){
-     alert(`Το συνολικό budget δεν μπορεί να γίνει μικρότερο από όσα έχουν ήδη ξοδευτεί (${euro(oldSpent)}).`);
+   if(total<correctedSpent-0.001){
+     alert(`Το συνολικό budget δεν μπορεί να είναι μικρότερο από όσα έχουν ήδη ξοδευτεί (${euro(correctedSpent)}).`);
      return false;
    }
    if(selectedStatus==='inactive'){
-     if(oldSpent>0||newSpend>0){
+     if(correctedSpent>0||newSpend>0){
        alert('Έξοδο με ήδη καταχωρημένες κινήσεις δεν μπορεί να γίνει ανενεργό.');
        return false;
      }
+     correctedSpent=0;
      newSpend=0;
    }
    if(selectedStatus==='paid'){
-     newSpend=Math.max(0,total-oldSpent);
+     newSpend=Math.max(0,total-correctedSpent);
    }
-   if(oldSpent+newSpend>total+0.001){
-     alert(`Η νέα κίνηση είναι μεγαλύτερη από το υπόλοιπο του εξόδου. Απομένουν ${euro(Math.max(0,total-oldSpent))}.`);
+   if(correctedSpent+newSpend>total+0.001){
+     alert(`Η νέα κίνηση είναι μεγαλύτερη από το υπόλοιπο του εξόδου. Απομένουν ${euro(Math.max(0,total-correctedSpent))}.`);
      return false;
    }
 
@@ -448,7 +450,7 @@ function editExpense(e){
      w.balance-=newSpend;
    }
 
-   const newSpent=oldSpent+newSpend;
+   const newSpent=correctedSpent+newSpend;
    const finalStatus=selectedStatus==='inactive'?'inactive':(total>0&&newSpent>=total-0.001?'paid':'pending');
    Object.assign(e,{
      name:fd.get('name'),
@@ -464,6 +466,14 @@ function editExpense(e){
      posted:newSpent>0
    });
 
+   if(Math.abs(correctedSpent-oldSpent)>0.001){
+     state.activity.push({
+       date:today,
+       label:`Διόρθωση ξοδεμένου: ${e.name} · ${euro(oldSpent)} → ${euro(correctedSpent)}`,
+       amount:0,
+       expenseId:e.id
+     });
+   }
    if(newSpend>0){
      state.activity.push({
        date:today,
@@ -477,26 +487,29 @@ function editExpense(e){
  });
  const d=document.getElementById('modal');
  const totalInput=d.querySelector('[name="actual"]');
+ const spentCorrectionInput=d.querySelector('[name="spentCorrection"]');
  const newSpendInput=d.querySelector('[name="newSpend"]');
  const statusInput=d.querySelector('[name="status"]');
  const preview=d.querySelector('#expenseRemainingPreview');
  const remainingReadonly=d.querySelector('#remainingReadonly');
  const refreshPreview=()=>{
    const total=Math.max(0,Number(totalInput?.value||0));
+   let corrected=Math.max(0,Number(spentCorrectionInput?.value||0));
    let add=Math.max(0,Number(newSpendInput?.value||0));
    const st=statusInput?.value;
-   if(st==='paid')add=Math.max(0,total-spentNow);
+   if(st==='paid')add=Math.max(0,total-corrected);
    if(st==='inactive'){
      if(remainingReadonly)remainingReadonly.value=euro(0);
      preview.innerHTML='Το έξοδο είναι σε αναμονή και <strong>δεν δεσμεύει χρήματα</strong> ακόμη.';
      return;
    }
-   const after=Math.min(total,spentNow+add);
+   const after=Math.min(total,corrected+add);
    const rem=Math.max(0,total-after);
    if(remainingReadonly)remainingReadonly.value=euro(rem);
-   preview.innerHTML=`Μετά τη νέα κίνηση θα έχουν ξοδευτεί <strong>${euro(after)}</strong> και θα απομένουν <strong>${euro(rem)}</strong>. Η νέα κίνηση αφαιρείται από το επιλεγμένο κοινό πορτοφόλι. Η αποταμίευση δεν επηρεάζεται.`;
+   const correctionNote=Math.abs(corrected-spentNow)>0.001?' Η αλλαγή στο «Έχουν ήδη ξοδευτεί» διορθώνει μόνο την καταγραφή και δεν αφαιρεί ξανά χρήματα από το πορτοφόλι.':'';
+   preview.innerHTML=`Μετά τη νέα κίνηση θα έχουν ξοδευτεί <strong>${euro(after)}</strong> και θα απομένουν <strong>${euro(rem)}</strong>. Η «Νέα κίνηση τώρα» αφαιρείται από το επιλεγμένο κοινό πορτοφόλι.${correctionNote} Η αποταμίευση δεν επηρεάζεται.`;
  };
- [totalInput,newSpendInput,statusInput].forEach(x=>x&&x.addEventListener('input',refreshPreview));
+ [totalInput,spentCorrectionInput,newSpendInput,statusInput].forEach(x=>x&&x.addEventListener('input',refreshPreview));
  refreshPreview();
 }
 function adjustWallet(id){const w=wallet(id);showModal('Διόρθωση υπολοίπου',`<div class="notice">Γράψε το πραγματικό ποσό που βλέπεις τώρα. Η διαφορά θα καταγραφεί ως διόρθωση ώστε το app να συμφωνεί με την πραγματικότητα.</div><div class="field" style="margin-top:14px"><label>${esc(w.owner)} · ${esc(w.name)}</label><input name="balance" type="number" step="0.01" value="${w.balance}" required></div><div class="field" style="margin-top:12px"><label>Σημείωση (προαιρετικό)</label><input name="note" placeholder="π.χ. χειροκίνητος έλεγχος τράπεζας"></div>`,fd=>{const next=Number(fd.get('balance')||0),diff=next-w.balance;w.balance=next;state.activity.push({date:today,label:`Διόρθωση ${w.owner} · ${w.name}${fd.get('note')?' — '+fd.get('note'):''}`,amount:diff})})}
