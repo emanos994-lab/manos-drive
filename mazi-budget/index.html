@@ -200,8 +200,8 @@ function expensesView(){let items=state.expenses;if(expenseFilter==='pending')it
 
 function savingsView(){return `<section class="card hero"><div class="muted">Συνολικά στην άκρη</div><div class="big" style="color:#b99cff">${euro(state.savings)}</div><div class="actions" style="margin-top:15px"><button class="btn green" data-action="savings-deposit">＋ Κατάθεση</button><button class="btn red" data-action="savings-withdraw">− Ανάληψη</button></div></section><div class="section-head"><h2>Ιστορικό αποταμίευσης</h2></div><section class="card"><div class="list">${state.savingsTx.length?state.savingsTx.map((t,idx)=>({t,idx})).reverse().map(({t,idx})=>`<div class="row"><div class="row-left"><div class="row-icon">${t.amount>0?'📥':'📤'}</div><div><div class="row-title">${esc(t.label)}</div><div class="row-sub">${fmtDate(t.date)} · ${esc(wallet(t.wallet)?.owner||'')} ${esc(wallet(t.wallet)?.name||'')}</div></div></div><div class="tx-actions"><div class="row-right"><strong class="${t.amount>0?'amount-pos':'amount-neg'}">${t.amount>0?'+':''}${euro(t.amount)}</strong></div><button type="button" class="tx-delete" title="Διαγραφή κίνησης" data-action="delete-savings-tx" data-index="${idx}">×</button></div></div>`).join(''):'<div class="empty">Δεν υπάρχει κίνηση ακόμα. Η πρώτη κατάθεση θα εμφανιστεί εδώ.</div>'}</div></section>`}
 
-function personalCard(key,p){return `<section class="card"><div class="hero-row"><div><div class="muted">Προσωπικό ${p.name}</div><div class="big">${euro(p.balance)}</div></div><span class="badge blue">Ιδιωτικό πορτοφόλι</span></div><div class="actions" style="margin-top:14px"><button class="btn green small" data-action="personal-add" data-person="${key}">＋ Έσοδο</button><button class="btn red small" data-action="personal-spend" data-person="${key}">− Έξοδο</button><button class="btn secondary small" data-action="personal-transfer" data-person="${key}">↗ Στο κοινό</button></div><div class="divider"></div><div class="list">${p.transactions.length?p.transactions.map((t,idx)=>({t,idx})).reverse().slice(0,6).map(({t,idx})=>`<div class="row"><div class="row-left"><div class="row-icon">${t.amount>=0?'＋':'−'}</div><div><div class="row-title">${esc(t.label)}</div><div class="row-sub">${fmtDate(t.date)}${t.note?' · '+esc(t.note):''}</div></div></div><div class="tx-actions"><div class="row-right"><strong class="${t.amount>=0?'amount-pos':'amount-neg'}">${t.amount>=0?'+':''}${euro(t.amount)}</strong></div><button type="button" class="tx-delete" title="Διαγραφή κίνησης" data-action="delete-personal-tx" data-person="${key}" data-index="${idx}">×</button></div></div>`).join(''):'<div class="empty">Δεν υπάρχει κίνηση ακόμα.</div>'}</div></section>`}
-function personalView(){return `<div class="notice">Τα προσωπικά πορτοφόλια είναι ξεχωριστά από τα κοινά. Μπορείς να δηλώνεις μόνο ό,τι θέλεις και να μεταφέρεις ποσό στην κοινή αποταμίευση όταν το αποφασίσεις.</div><div class="grid grid-2" style="margin-top:14px">${personalCard('manos',state.personal.manos)}${personalCard('penny',state.personal.penny)}</div>`}
+function personalCard(key,p){return `<section class="card"><div class="hero-row"><div><div class="muted">Προσωπικό ${p.name}</div><div class="big">${euro(p.balance)}</div></div><span class="badge blue">Ιδιωτικό πορτοφόλι</span></div><div class="actions" style="margin-top:14px"><button class="btn secondary small" data-action="personal-fund" data-person="${key}">← Από κοινά</button><button class="btn green small" data-action="personal-add" data-person="${key}">＋ Έξτρα έσοδο</button><button class="btn red small" data-action="personal-spend" data-person="${key}">− Έξοδο</button><button class="btn secondary small" data-action="personal-transfer" data-person="${key}">↗ Στο κοινό</button></div><div class="divider"></div><div class="list">${p.transactions.length?p.transactions.map((t,idx)=>({t,idx})).reverse().slice(0,6).map(({t,idx})=>`<div class="row"><div class="row-left"><div class="row-icon">${t.amount>=0?'＋':'−'}</div><div><div class="row-title">${esc(t.label)}</div><div class="row-sub">${fmtDate(t.date)}${t.note?' · '+esc(t.note):''}</div></div></div><div class="tx-actions"><div class="row-right"><strong class="${t.amount>=0?'amount-pos':'amount-neg'}">${t.amount>=0?'+':''}${euro(t.amount)}</strong></div><button type="button" class="tx-delete" title="Διαγραφή κίνησης" data-action="delete-personal-tx" data-person="${key}" data-index="${idx}">×</button></div></div>`).join(''):'<div class="empty">Δεν υπάρχει κίνηση ακόμα.</div>'}</div></section>`}
+function personalView(){return `<div class="notice">Τα προσωπικά πορτοφόλια είναι ξεχωριστά από τα κοινά. Το «Από κοινά» μεταφέρει πραγματικά χρήματα από το κοινό ταμείο. Το «Έξτρα έσοδο» είναι μόνο για χρήματα που ήρθαν απ' έξω, όπως κέρδος, δώρο ή επιστροφή.</div><div class="grid grid-2" style="margin-top:14px">${personalCard('manos',state.personal.manos)}${personalCard('penny',state.personal.penny)}</div>`}
 
 function calcForecast(){const f=state.forecast;const income=f.income.reduce((a,b)=>a+Number(b||0),0)+Number(f.extrasIncome||0);let exp=state.expenses.filter(e=>!['ΔΕΗ','ΕΥΔΑΠ','Κοινόχρηστα'].includes(e.name)).reduce((s,e)=>s+Number(f.expenseOverrides[e.id]??e.planned??0),0);exp+=Number(f.dei||0)+Number(f.eydap||0)+Number(f.koinoxrista||0)+Number(f.extrasExpense||0);return{income,exp,left:income-exp}}
 function forecastView(){const r=calcForecast();return `<div class="notice">Sandbox: ό,τι αλλάζεις εδώ δεν πειράζει τον τρέχοντα μήνα. Είναι μόνο για να βλέπεις περίπου πώς βγαίνει ο επόμενος.</div><div class="section-head"><h2>Σενάριο επόμενου μήνα</h2><button class="btn secondary small" data-action="forecast-reset">Επαναφορά</button></div><section class="forecast-result"><div class="stat"><small>Έσοδα</small><strong class="amount-pos">${euro(r.income)}</strong></div><div class="stat"><small>Έξοδα</small><strong class="amount-neg">${euro(r.exp)}</strong></div><div class="stat"><small>Πιθανό υπόλοιπο</small><strong class="${r.left>=0?'amount-pos':'amount-neg'}">${r.left>=0?'+':''}${euro(r.left)}</strong></div></section><div class="section-head"><h2>Μεταβλητά / έκτακτα</h2></div><section class="card"><div class="form-grid"><div class="field"><label>ΔΕΗ</label><input data-forecast="dei" type="number" step="0.01" value="${state.forecast.dei}"></div><div class="field"><label>ΕΥΔΑΠ</label><input data-forecast="eydap" type="number" step="0.01" value="${state.forecast.eydap}"></div><div class="field"><label>Κοινόχρηστα</label><input data-forecast="koinoxrista" type="number" step="0.01" value="${state.forecast.koinoxrista}"></div><div class="field"><label>Έκτακτο έσοδο</label><input data-forecast="extrasIncome" type="number" step="0.01" value="${state.forecast.extrasIncome}"></div><div class="field"><label>Έκτακτο έξοδο</label><input data-forecast="extrasExpense" type="number" step="0.01" value="${state.forecast.extrasExpense}"></div></div></section><div class="section-head"><h2>Προσαρμογή παγίων</h2></div><section class="card"><div class="list">${state.expenses.filter(e=>!['ΔΕΗ','ΕΥΔΑΠ','Κοινόχρηστα'].includes(e.name)).map(e=>`<div class="row"><div class="row-left"><div class="row-icon">${iconFor(e.category)}</div><div><div class="row-title">${esc(e.name)}</div><div class="row-sub">Βάση ${euro(e.planned)}</div></div></div><div class="inline-edit"><input type="number" step="0.01" data-forecast-expense="${e.id}" value="${state.forecast.expenseOverrides[e.id]??e.planned}"></div></div>`).join('')}</div></section>`}
@@ -255,6 +255,7 @@ function action(type,data={}){
  if(type==='edit-allocation')return editAllocation();
  if(type==='savings-deposit')return savingsMove(1);
  if(type==='savings-withdraw')return savingsMove(-1);
+ if(type==='personal-fund')return fundPersonalFromShared(data.person);
  if(type==='personal-add')return personalMove(data.person,1);
  if(type==='personal-spend')return personalMove(data.person,-1);
  if(type==='personal-transfer')return personalTransfer(data.person);
@@ -321,7 +322,41 @@ function editAllocation(){const rem=forecastMonth();if(rem<=0)return alert('Δε
 
 function addCard(){showModal('Έκτακτη χρήση πιστωτικής',`<div class="form-grid"><div class="field"><label>Περιγραφή</label><input name="label" required placeholder="π.χ. αγορά για σπίτι"></div><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div></div><div class="warning notice" style="margin-top:12px">Θα θεωρηθεί δεσμευμένο έξοδο του τρέχοντος κύκλου μέχρι να εξοφληθεί.</div>`,fd=>state.cardExtra.push({label:fd.get('label'),amount:Number(fd.get('amount')||0),date:today,status:'pending'}))}
 function savingsMove(sign){showModal(sign>0?'Κατάθεση στην άκρη':'Ανάληψη από την άκρη',`<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>${sign>0?'Από πού':'Πού θα μπουν'}</label><select name="wallet">${walletOptions('mbank')}</select></div><div class="field" style="grid-column:1/-1"><label>Αιτιολογία</label><input name="label" required placeholder="π.χ. περίσσευμα μήνα / έκτακτο έξοδο"></div></div>`,fd=>{const amt=Number(fd.get('amount')||0)*sign,w=wallet(fd.get('wallet'));if(sign>0&&w.balance<Math.abs(amt))return alert('Το συγκεκριμένο πορτοφόλι δεν έχει αρκετό διαθέσιμο υπόλοιπο.'),false;if(sign<0&&state.savings<Math.abs(amt))return alert('Δεν υπάρχουν αρκετά χρήματα στην άκρη.'),false;state.savings+=amt;w.balance-=amt;state.savingsTx.push({id:'s'+Date.now()+Math.random().toString(36).slice(2,7),date:today,amount:amt,label:fd.get('label'),wallet:w.id})})}
-function personalMove(person,sign){const p=state.personal[person];showModal(`${sign>0?'Έσοδο':'Έξοδο'} · ${p.name}`,`<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>Περιγραφή</label><input name="label" required placeholder="${sign>0?'π.χ. Κέρδος':'π.χ. Στοίχημα / Αγορά'}"></div><div class="field" style="grid-column:1/-1"><label>Σχόλιο / λόγος (προαιρετικό)</label><textarea name="note" placeholder="${sign>0?'π.χ. κέρδος από στοίχημα Ολυμπιακός - Ρεάλ':'π.χ. αγορά ακουστικών'}"></textarea></div></div>`,fd=>{const amt=Math.abs(Number(fd.get('amount')||0))*sign;if(sign<0&&p.balance<Math.abs(amt))return alert('Το προσωπικό υπόλοιπο δεν επαρκεί.'),false;p.balance+=amt;p.transactions.push({date:today,amount:amt,label:fd.get('label'),note:fd.get('note')||''})})}
+function fundPersonalFromShared(person){
+ const p=state.personal[person];
+ const expenseName=person==='manos'?'Προσωπικά Μάνου':'Προσωπικά Πένυ';
+ const budgetExpense=state.expenses.find(e=>e.name===expenseName);
+ const total=budgetExpense?expenseTotal(budgetExpense):0;
+ const already=budgetExpense?spentAmount(budgetExpense):0;
+ const remaining=Math.max(0,total-already);
+ showModal(`Από κοινά → ${p.name}`,`
+   <div class="notice">Αυτό είναι η κανονική μεταφορά από το κοινό budget προς το προσωπικό πορτοφόλι. Θα μειώσει τα κοινά διαθέσιμα και θα αυξήσει το προσωπικό υπόλοιπο.</div>
+   <div class="form-grid" style="margin-top:14px">
+     <div class="field"><label>Ποσό</label><input name="amount" type="number" min="0" step="0.01" value="${remaining>0?remaining:100}" required></div>
+     <div class="field"><label>Από ποιο κοινό πορτοφόλι</label><select name="wallet">${walletOptions('mbank')}</select></div>
+     <div class="field" style="grid-column:1/-1"><label>Σημείωση</label><input name="label" value="Προσωπικά ${p.name}"></div>
+   </div>
+   ${budgetExpense?`<div class="mini muted" style="margin-top:10px">Budget προσωπικών: ${euro(total)} · έχουν δοθεί ${euro(already)} · απομένουν ${euro(remaining)}</div>`:''}
+ `,fd=>{
+   const amt=Math.max(0,Number(fd.get('amount')||0));
+   const w=wallet(fd.get('wallet'));
+   if(!w||amt<=0)return false;
+   if(w.balance<amt){alert('Το κοινό πορτοφόλι δεν έχει αρκετό διαθέσιμο υπόλοιπο.');return false;}
+   w.balance-=amt;
+   p.balance+=amt;
+   if(budgetExpense){
+     const before=spentAmount(budgetExpense);
+     const after=Math.min(expenseTotal(budgetExpense),before+amt);
+     budgetExpense.spent=after;
+     budgetExpense.spentApplied=after;
+     budgetExpense.posted=after>0;
+     budgetExpense.status=after>=expenseTotal(budgetExpense)&&expenseTotal(budgetExpense)>0?'paid':'pending';
+   }
+   p.transactions.push({date:today,amount:amt,label:fd.get('label')||`Προσωπικά ${p.name}`,note:'Μεταφορά από κοινά',sourceWallet:w.id,commonFunding:true,budgetExpenseId:budgetExpense?.id||null});
+   state.activity.push({date:today,label:`Από κοινά → ${p.name}`,amount:-amt});
+ });
+}
+function personalMove(person,sign){const p=state.personal[person];showModal(`${sign>0?'Έξτρα έσοδο':'Έξοδο'} · ${p.name}`,`<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>Περιγραφή</label><input name="label" required placeholder="${sign>0?'π.χ. Κέρδος / Δώρο / Επιστροφή':'π.χ. Στοίχημα / Αγορά'}"></div><div class="field" style="grid-column:1/-1"><label>Σχόλιο / λόγος (προαιρετικό)</label><textarea name="note" placeholder="${sign>0?'π.χ. κέρδος από στοίχημα Ολυμπιακός - Ρεάλ':'π.χ. αγορά ακουστικών'}"></textarea></div></div>`,fd=>{const amt=Math.abs(Number(fd.get('amount')||0))*sign;if(sign<0&&p.balance<Math.abs(amt))return alert('Το προσωπικό υπόλοιπο δεν επαρκεί.'),false;p.balance+=amt;p.transactions.push({date:today,amount:amt,label:fd.get('label'),note:fd.get('note')||''})})}
 function personalTransfer(person){const p=state.personal[person];showModal(`Μεταφορά από ${p.name} στο κοινό`, `<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>Προορισμός</label><select name="dest"><option value="savings">Στην άκρη</option><option value="wallet">Κοινά μετρητά σπιτιού</option></select></div><div class="field" style="grid-column:1/-1"><label>Σημείωση</label><input name="label" value="Μεταφορά στο κοινό"></div></div>`,fd=>{const amt=Number(fd.get('amount')||0);if(amt>p.balance)return alert('Το προσωπικό υπόλοιπο δεν επαρκεί.'),false;p.balance-=amt;const dest=fd.get('dest');const tx={date:today,amount:-amt,label:fd.get('label'),transferDest:dest};if(dest==='savings'){state.savings+=amt;const sid='s'+Date.now()+Math.random().toString(36).slice(2,7);state.savingsTx.push({id:sid,date:today,amount:amt,label:`Από προσωπικό ${p.name}`,wallet:'homecash'});tx.linkedSavingsId=sid}else{wallet('homecash').balance+=amt;tx.destWallet='homecash'}p.transactions.push(tx)})}
 function deleteSavingsTx(index){
  const tx=state.savingsTx[index]; if(!tx)return;
@@ -335,10 +370,17 @@ function deleteSavingsTx(index){
 function deletePersonalTx(person,index){
  const p=state.personal[person],tx=p?.transactions?.[index]; if(!tx)return;
  if(!confirm(`Να διαγραφεί η κίνηση «${tx.label}» (${euro(tx.amount)});`))return;
- // Simple personal income/expense: reverse the transaction from the personal balance.
- // Transfers created by newer versions can carry linked destination metadata and are reversed too.
+ // Reverse the personal balance first.
  p.balance-=Number(tx.amount||0);
- if(tx.transferDest==='savings'){
+ if(tx.commonFunding){
+   const w=wallet(tx.sourceWallet); if(w)w.balance+=Math.abs(Number(tx.amount||0));
+   const be=state.expenses.find(e=>e.id===tx.budgetExpenseId);
+   if(be){
+     const next=Math.max(0,spentAmount(be)-Math.abs(Number(tx.amount||0)));
+     be.spent=next;be.spentApplied=next;be.posted=next>0;
+     be.status=next>=expenseTotal(be)&&expenseTotal(be)>0?'paid':'pending';
+   }
+ }else if(tx.transferDest==='savings'){
    state.savings-=Math.abs(Number(tx.amount||0));
    if(tx.linkedSavingsId){
      const si=state.savingsTx.findIndex(x=>x.id===tx.linkedSavingsId);
