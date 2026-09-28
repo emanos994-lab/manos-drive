@@ -1,0 +1,13 @@
+{
+  "name":"Μαζί — Οικονομικά",
+  "short_name":"Μαζί",
+  "description":"Κοινός προϋπολογισμός για Μάνο και Πένυ.",
+  "lang":"el-GR",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "orientation":"portrait-primary",
+  "background_color":"#f5f8fc",
+  "theme_color":"#a8ccf7",
+  "icons":[]
+}
