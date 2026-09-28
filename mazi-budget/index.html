@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Μαζί" />
   <link rel="manifest" href="manifest.webmanifest" />
   
-  <title>Μαζί — Οικονομικά v3.0</title>
+  <title>Μαζί — Οικονομικά v3.1</title>
   <style>
 :root{
   --bg:#09111f; --panel:#101a2c; --panel2:#152238; --soft:#1d2c46; --text:#f5f7fb; --muted:#8fa3bf;
@@ -48,6 +48,22 @@ main{padding:0 18px 24px}.grid{display:grid;gap:14px}.grid-2{grid-template-colum
 .allocation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.allocation-grid>div{padding:12px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.025)}.allocation-grid small{display:block;color:var(--muted);margin-bottom:5px}.allocation-grid strong{font-size:18px}
 .setup-title{margin:20px 0 9px;font-size:15px}.setup-list{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow:auto;padding-right:3px}.setup-item{display:grid;grid-template-columns:auto 1fr 115px;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--border);background:var(--panel2);border-radius:14px}.setup-item>input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue)}.setup-item span{min-width:0}.setup-item strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.setup-item small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.setup-amount{width:100%!important;padding:8px!important;text-align:right}.btn:disabled{opacity:.42;cursor:not-allowed}
 @media(max-width:560px){.allocation-grid{grid-template-columns:1fr}.setup-item{grid-template-columns:auto 1fr 92px}.section-head.compact{align-items:flex-start}.section-head.compact .big{font-size:23px}.modal-inner{max-height:86vh;overflow:auto}}
+.dashboard-panel{margin-top:16px}
+.dashboard-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 9px}
+.dashboard-panel-head h2{margin:0;font-size:17px}
+.dash-mini-btn{width:32px;height:32px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-weight:900;cursor:pointer}
+.dashboard-panel.is-collapsed{padding:9px 12px;border:1px solid var(--border);border-radius:16px;background:var(--panel)}
+.dashboard-panel.is-collapsed .dashboard-panel-head{margin:0}
+.dashboard-panel-body[hidden]{display:none!important}
+.dash-settings{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.dash-setting-row{display:grid;grid-template-columns:1fr 150px;gap:12px;align-items:center;padding:11px 12px;border:1px solid var(--border);border-radius:14px;background:var(--panel2)}
+.dash-setting-row strong{font-size:13px}
+.dash-setting-row select{width:100%;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:11px;padding:9px}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.quick-choice{min-height:78px;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.quick-choice span{font-size:20px}
+.quick-choice small{font-weight:600;opacity:.75}
+@media(max-width:560px){.dash-setting-row{grid-template-columns:1fr 135px}.quick-grid{grid-template-columns:1fr 1fr}}
 
 </style>
 </head>
@@ -60,6 +76,7 @@ main{padding:0 18px 24px}.grid{display:grid;gap:14px}.grid-2{grid-template-colum
       </div>
       <div class="top-actions">
         <button class="icon-btn" id="btnQuickAdd" title="Γρήγορη προσθήκη">＋</button>
+        <button class="icon-btn" id="btnDashboardCustomize" title="Προσαρμογή αρχικής">⚙</button>
         <button class="avatar">Μ</button>
       </div>
     </header>
@@ -87,6 +104,7 @@ const defaults={
   setupComplete:false,
   savings:0,
   allocation:{savings:0,other:0,otherLabel:'Άλλο / ελεύθερα'},
+  dashboard:{sections:{overview:'open',stats:'open',allocation:'open',due:'open',wallets:'open',periodic:'open'}},
   wallets:[
     {id:'mbank',owner:'Μάνος',name:'Τράπεζα',balance:0,icon:'🏦'},
     {id:'mcash',owner:'Μάνος',name:'Μετρητά',balance:0,icon:'💶'},
@@ -168,6 +186,33 @@ function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt
 const titles={home:'Αρχική',income:'Έσοδα',expenses:'Έξοδα',savings:'Στην άκρη',personal:'Προσωπικά',forecast:'Πρόβλεψη'};
 function render(){document.getElementById('screenTitle').textContent=titles[screen];document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===screen));const app=document.getElementById('app');app.innerHTML=({home:homeView,income:incomeView,expenses:expensesView,savings:savingsView,personal:personalView,forecast:forecastView})[screen]();bind();}
 
+const dashboardSections=[
+ ['overview','Σύνοψη τώρα'],
+ ['stats','Γρήγορα σύνολα'],
+ ['allocation','Μοίρασμα υπολοίπου'],
+ ['due','Τι πρέπει να πληρωθεί'],
+ ['wallets','Πού βρίσκονται τα χρήματα'],
+ ['periodic','Περιοδικά που περιμένουμε']
+];
+function dashboardMode(id){return state.dashboard?.sections?.[id]||'open'}
+function dashboardPanel(id,title,body){
+ const mode=dashboardMode(id);
+ if(mode==='hidden')return '';
+ const collapsed=mode==='collapsed';
+ return `<section class="dashboard-panel ${collapsed?'is-collapsed':''}" data-dashboard-id="${id}">
+   <div class="dashboard-panel-head"><h2>${title}</h2><button type="button" class="dash-mini-btn" data-action="dash-toggle" data-id="${id}" title="${collapsed?'Άνοιγμα':'Ελαχιστοποίηση'}">${collapsed?'⌄':'−'}</button></div>
+   <div class="dashboard-panel-body" ${collapsed?'hidden':''}>${body}</div>
+ </section>`;
+}
+function dashboardSettings(){
+ const rows=dashboardSections.map(([id,label])=>`<div class="dash-setting-row"><strong>${label}</strong><select name="dash_${id}"><option value="open" ${dashboardMode(id)==='open'?'selected':''}>Εμφανές</option><option value="collapsed" ${dashboardMode(id)==='collapsed'?'selected':''}>Ελαχιστοποιημένο</option><option value="hidden" ${dashboardMode(id)==='hidden'?'selected':''}>Κρυφό</option></select></div>`).join('');
+ showModal('Προσαρμογή αρχικής',`<div class="notice">Διάλεξε τι θα βλέπεις στην αρχική. Τα κρυφά στοιχεία δεν διαγράφονται, απλώς δεν εμφανίζονται.</div><div class="dash-settings">${rows}</div>`,fd=>{
+   if(!state.dashboard)state.dashboard={sections:{}};
+   if(!state.dashboard.sections)state.dashboard.sections={};
+   dashboardSections.forEach(([id])=>state.dashboard.sections[id]=fd.get('dash_'+id)||'open');
+ },'Αποθήκευση');
+}
+
 function allocationCard(){const rem=forecastMonth(),a=state.allocation||{savings:0,other:0,otherLabel:'Άλλο / ελεύθερα'},left=unallocated();return `<section class="card allocation-card"><div class="section-head compact"><div><div class="muted">Μετά από όλα τα προγραμματισμένα έξοδα</div><div class="big ${rem>=0?'amount-pos':'amount-neg'}">${rem>=0?'Μένουν ':'Λείπουν '}${euro(Math.abs(rem))}</div></div><button class="btn secondary small" data-action="edit-allocation" ${rem<=0?'disabled':''}>Μοίρασμα</button></div>${rem>=0?`<div class="allocation-grid"><div><small>🏦 Στην άκρη</small><strong>${euro(a.savings)}</strong></div><div><small>✨ ${esc(a.otherLabel||'Άλλο / ελεύθερα')}</small><strong>${euro(a.other)}</strong></div><div><small>○ Αδιάθετα</small><strong class="${left<0?'amount-neg':''}">${euro(left)}</strong></div></div><div class="mini muted" style="margin-top:10px">Η κατανομή είναι σχέδιο. Τα χρήματα μπαίνουν πραγματικά στην «Άκρη» όταν κάνετε κατάθεση.</div>`:`<div class="danger notice" style="margin-top:12px">Ο κύκλος είναι αρνητικός κατά ${euro(Math.abs(rem))}. Χρειάζεται επιπλέον έσοδο ή ποσό από την άκρη.</div>`}</section>`}
 
 function homeView(){
@@ -176,15 +221,27 @@ function homeView(){
  const bankTotal=state.wallets.filter(w=>w.name==='Τράπεζα').reduce((a,w)=>a+Number(w.balance||0),0);
  const cashTotal=state.wallets.filter(w=>w.name.includes('Μετρητά')).reduce((a,w)=>a+Number(w.balance||0),0);
  const ticket=Number(wallet('ticket')?.balance||0);
- return `${!state.setupComplete?`<section class="card setup-banner"><span class="badge orange">Πρώτη ρύθμιση</span><h2>Πού βρίσκεστε σήμερα;</h2><p class="muted">Συμπλήρωσε τι έχει ήδη μπει, τι έχει ήδη πληρωθεί και τα πραγματικά σημερινά υπόλοιπα. Έτσι δεν θα αφαιρέσουμε ή προσθέσουμε τίποτα δύο φορές.</p><button class="btn" data-action="initial-setup">Ξεκίνα αρχική κατάσταση</button></section>`:''}
- <section class="home-overview">
+
+ const overview=`<section class="home-overview" style="margin-bottom:0">
    <div class="card available-card"><span class="badge blue">● Πραγματική εικόνα τώρα</span><div class="muted" style="margin-top:14px">Διαθέσιμα τώρα</div><div class="big">${euro(avail)}</div><div class="money-breakdown"><span>🏦 Τράπεζες ${euro(bankTotal)}</span><span>💶 Μετρητά ${euro(cashTotal)}</span><span>🎫 Ticket ${euro(ticket)}</span></div><div class="mini muted" style="margin-top:13px">Δεν περιλαμβάνει τα ${euro(state.savings)} που έχετε στην άκρη.</div></div>
    <div class="overview-side"><div class="mini-kpi"><small>Ελεύθερα για κίνηση</small><strong class="${free>=0?'amount-pos':'amount-neg'}">${euro(free)}</strong><div class="mini muted">Διαθέσιμα μείον όσα εκκρεμούν ακόμη. Η αποταμίευση δεν αγγίζεται.</div></div><div class="mini-kpi"><small>Πρόβλεψη τέλους κύκλου</small><strong class="${forecast>=0?'amount-pos':'amount-neg'}">${forecast>=0?'+':''}${euro(forecast)}</strong><div class="mini muted">Έσοδα μείον όλα τα προγραμματισμένα έξοδα</div></div><div class="mini-kpi"><small>Εκκρεμούν ακόμη</small><strong class="amount-warn">${euro(pendingExpenses())}</strong><div class="mini muted">Έχουν ήδη ξοδευτεί ${euro(paidExpenses())}</div></div></div>
- </section>
- <section class="stats"><div class="stat"><small>Αναμενόμενα έσοδα</small><strong>${euro(expected)}</strong></div><div class="stat"><small>Έχουν ήδη μπει</small><strong class="amount-pos">${euro(receivedIncome())}</strong></div><div class="stat"><small>Σύνολο εξόδων</small><strong>${euro(exp)}</strong></div><div class="stat"><small>Στην άκρη</small><strong style="color:#c9b8ff">${euro(state.savings)}</strong></div></section>${allocationCard()}
- <div class="section-head"><h2>Τι πρέπει να πληρωθεί</h2></div><section class="card"><div class="list">${dueSoon.length?dueSoon.map(expenseRow).join(''):'<div class="empty">Δεν υπάρχουν κοντινές λήξεις με ημερομηνία ακόμα.</div>'}</div></section>
- <div class="section-head"><h2>Πού βρίσκονται τα χρήματα</h2><button class="btn secondary small" data-action="setup-balances">Διόρθωση υπολοίπων</button></div><section class="wallets">${state.wallets.map(w=>`<div class="wallet"><small>${esc(w.owner)} · ${esc(w.name)}</small><strong>${euro(w.balance)}</strong><div class="mini">Τρέχον υπόλοιπο</div><button class="btn ghost small" data-action="adjust-wallet" data-id="${w.id}">Διόρθωση</button></div>`).join('')}</section>
- <div class="section-head"><h2>Περιοδικά που περιμένουμε</h2></div><section class="card"><div class="list">${['ΔΕΗ','ΕΥΔΑΠ','Κοινόχρηστα'].map(n=>{const e=state.expenses.find(x=>x.name===n);return `<div class="row clickable" data-action="edit-expense" data-id="${e.id}"><div class="row-left"><div class="row-icon">🧾</div><div><div class="row-title">${n}</div><div class="row-sub">${e.status==='inactive'?'Δεν έχει έρθει ακόμα':`Καταχωρήθηκε${e.due?' · λήξη '+fmtDateLong(e.due):''}`}</div></div></div><div class="row-right"><strong>${e.status==='inactive'?'—':euro(expenseTotal(e))}</strong><span class="pill ${remainingExpense(e)===0&&e.status!=='inactive'?'paid':'pending'}">${e.status==='inactive'?'Αναμονή':remainingExpense(e)===0?'Πληρώθηκε':'Εκκρεμεί'}</span></div></div>`}).join('')}</div></section>`;
+ </section>`;
+
+ const stats=`<section class="stats" style="margin-top:0"><div class="stat"><small>Αναμενόμενα έσοδα</small><strong>${euro(expected)}</strong></div><div class="stat"><small>Έχουν ήδη μπει</small><strong class="amount-pos">${euro(receivedIncome())}</strong></div><div class="stat"><small>Σύνολο εξόδων</small><strong>${euro(exp)}</strong></div><div class="stat"><small>Στην άκρη</small><strong style="color:#c9b8ff">${euro(state.savings)}</strong></div></section>`;
+
+ const due=`<section class="card"><div class="list">${dueSoon.length?dueSoon.map(expenseRow).join(''):'<div class="empty">Δεν υπάρχουν κοντινές λήξεις με ημερομηνία ακόμα.</div>'}</div></section>`;
+
+ const wallets=`<div class="actions" style="justify-content:flex-end;margin-bottom:9px"><button class="btn secondary small" data-action="setup-balances">Διόρθωση υπολοίπων</button></div><section class="wallets">${state.wallets.map(w=>`<div class="wallet"><small>${esc(w.owner)} · ${esc(w.name)}</small><strong>${euro(w.balance)}</strong><div class="mini">Τρέχον υπόλοιπο</div><button class="btn ghost small" data-action="adjust-wallet" data-id="${w.id}">Διόρθωση</button></div>`).join('')}</section>`;
+
+ const periodic=`<section class="card"><div class="list">${['ΔΕΗ','ΕΥΔΑΠ','Κοινόχρηστα'].map(n=>{const e=state.expenses.find(x=>x.name===n);return `<div class="row clickable" data-action="edit-expense" data-id="${e.id}"><div class="row-left"><div class="row-icon">🧾</div><div><div class="row-title">${n}</div><div class="row-sub">${e.status==='inactive'?'Δεν έχει έρθει ακόμα':`Καταχωρήθηκε${e.due?' · λήξη '+fmtDateLong(e.due):''}`}</div></div></div><div class="row-right"><strong>${e.status==='inactive'?'—':euro(expenseTotal(e))}</strong><span class="pill ${remainingExpense(e)===0&&e.status!=='inactive'?'paid':'pending'}">${e.status==='inactive'?'Αναμονή':remainingExpense(e)===0?'Πληρώθηκε':'Εκκρεμεί'}</span></div></div>`}).join('')}</div></section>`;
+
+ return `${!state.setupComplete?`<section class="card setup-banner"><span class="badge orange">Πρώτη ρύθμιση</span><h2>Πού βρίσκεστε σήμερα;</h2><p class="muted">Συμπλήρωσε τι έχει ήδη μπει, τι έχει ήδη πληρωθεί και τα πραγματικά σημερινά υπόλοιπα. Έτσι δεν θα αφαιρέσουμε ή προσθέσουμε τίποτα δύο φορές.</p><button class="btn" data-action="initial-setup">Ξεκίνα αρχική κατάσταση</button></section>`:''}
+ ${dashboardPanel('overview','Σύνοψη τώρα',overview)}
+ ${dashboardPanel('stats','Γρήγορα σύνολα',stats)}
+ ${dashboardPanel('allocation','Μοίρασμα υπολοίπου',allocationCard())}
+ ${dashboardPanel('due','Τι πρέπει να πληρωθεί',due)}
+ ${dashboardPanel('wallets','Πού βρίσκονται τα χρήματα',wallets)}
+ ${dashboardPanel('periodic','Περιοδικά που περιμένουμε',periodic)}`;
 }
 
 function incomeView(){return `<div class="notice">Τα ποσά και οι ημερομηνίες είναι προτεινόμενα. Κάθε μήνα μπορείς να αλλάξεις ποσό, πότε αναμένεται και σε ποιο πορτοφόλι μπήκε.</div><div class="section-head"><h2>Έσοδα κύκλου</h2><button class="btn" data-action="add-income">＋ Έκτακτο έσοδο</button></div><section class="card"><div class="list">${state.incomes.map(i=>`<div class="row clickable" data-action="edit-income" data-id="${i.id}"><div class="row-left"><div class="row-icon">${i.status==='received'?'✅':'💰'}</div><div><div class="row-title">${esc(i.name)}</div><div class="row-sub">${i.expectedWindow||'Χωρίς ημερομηνία'} · ${esc(wallet(i.wallet)?.name||'')}${i.note?' · '+esc(i.note):''}</div></div></div><div class="row-right"><strong>${euro(i.amount)}</strong><span class="pill ${i.status==='received'?'paid':'expected'}">${i.status==='received'?'Μπήκε':'Αναμένεται'}</span></div></div>`).join('')}</div></section><div class="section-head"><h2>Σύνοψη</h2></div><section class="stats"><div class="stat"><small>Σύνολο</small><strong>${euro(totalExpectedIncome())}</strong></div><div class="stat"><small>Έχουν μπει</small><strong class="amount-pos">${euro(receivedIncome())}</strong></div><div class="stat"><small>Αναμένονται</small><strong class="amount-warn">${euro(totalExpectedIncome()-receivedIncome())}</strong></div><div class="stat"><small>Διαθέσιμα τώρα</small><strong>${euro(availableNow())}</strong></div></section>`}
@@ -216,6 +273,7 @@ function bind(){
 
 document.querySelectorAll('.bottom-nav button').forEach(b=>b.addEventListener('click',()=>{screen=b.dataset.screen;render()}));
 document.getElementById('btnQuickAdd').onclick=()=>quickAdd();
+document.getElementById('btnDashboardCustomize').onclick=()=>dashboardSettings();
 
 function showModal(title,body,onSave,saveText='Αποθήκευση'){
  const d=document.getElementById('modal');
@@ -252,6 +310,12 @@ function action(type,data={}){
  if(type==='adjust-wallet')return adjustWallet(data.id);
  if(type==='setup-balances')return setupBalances();
  if(type==='initial-setup')return initialSetup();
+ if(type==='dash-toggle'){
+   if(!state.dashboard)state.dashboard={sections:{}};
+   if(!state.dashboard.sections)state.dashboard.sections={};
+   state.dashboard.sections[data.id]=dashboardMode(data.id)==='collapsed'?'open':'collapsed';
+   save();return render();
+ }
  if(type==='edit-allocation')return editAllocation();
  if(type==='savings-deposit')return savingsMove(1);
  if(type==='savings-withdraw')return savingsMove(-1);
@@ -456,7 +520,24 @@ function deletePersonalTx(person,index){
  p.transactions.splice(index,1);
  save();render();
 }
-function quickAdd(){showModal('Γρήγορη προσθήκη',`<div class="grid grid-2"><button type="button" class="btn" onclick="document.getElementById('modal').close();setTimeout(()=>action('add-income'),0)">＋ Έσοδο</button><button type="button" class="btn red" onclick="document.getElementById('modal').close();setTimeout(()=>action('add-expense'),0)">− Έξοδο</button><button type="button" class="btn secondary" onclick="document.getElementById('modal').close();setTimeout(()=>action('savings-deposit'),0)">＋ Στην άκρη</button><button type="button" class="btn secondary" onclick="document.getElementById('modal').close();setTimeout(()=>action('setup-balances'),0)">Διόρθωση υπολοίπων</button></div>`,()=>false,'Κλείσιμο')}
+function quickAdd(){
+ const d=document.getElementById('modal');
+ d.innerHTML=`<div class="modal-inner"><div class="modal-head"><h2>Γρήγορη προσθήκη</h2><button type="button" class="close" id="quickClose">×</button></div>
+ <div class="quick-grid">
+   <button type="button" class="btn quick-choice" data-quick="add-income"><span>↙</span><strong>Έσοδο</strong><small>Νέο ή έκτακτο έσοδο</small></button>
+   <button type="button" class="btn red quick-choice" data-quick="add-expense"><span>↗</span><strong>Έξοδο</strong><small>Νέο έξοδο / budget</small></button>
+   <button type="button" class="btn secondary quick-choice" data-quick="savings-deposit"><span>◉</span><strong>Στην άκρη</strong><small>Κατάθεση αποταμίευσης</small></button>
+   <button type="button" class="btn secondary quick-choice" data-quick="setup-balances"><span>◎</span><strong>Υπόλοιπα</strong><small>Διόρθωση πορτοφολιών</small></button>
+ </div></div>`;
+ d.querySelector('#quickClose').onclick=()=>d.close('cancel');
+ d.querySelectorAll('[data-quick]').forEach(btn=>btn.onclick=()=>{
+   const type=btn.dataset.quick;
+   d.close('action');
+   setTimeout(()=>action(type),0);
+ });
+ d.oncancel=e=>{e.preventDefault();d.close('cancel')};
+ d.showModal();
+}
 
 render();
 
