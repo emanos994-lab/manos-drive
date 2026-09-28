@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Μαζί" />
   <link rel="manifest" href="manifest.webmanifest" />
   
-  <title>Μαζί — Οικονομικά v3.2</title>
+  <title>Μαζί — Οικονομικά v3.3</title>
   <style>
 :root{
   --bg:#09111f; --panel:#101a2c; --panel2:#152238; --soft:#1d2c46; --text:#f5f7fb; --muted:#8fa3bf;
@@ -116,18 +116,16 @@ const defaults={
   dashboard:{presetVersion:2,sections:{overview:'open',stats:'hidden',allocation:'collapsed',due:'open',wallets:'hidden',periodic:'hidden'}},
   wallets:[
     {id:'mbank',owner:'Μάνος',name:'Τράπεζα',balance:0,icon:'🏦'},
-    {id:'mcash',owner:'Μάνος',name:'Μετρητά',balance:0,icon:'💶'},
     {id:'ticket',owner:'Μάνος',name:'Ticket Restaurant',balance:0,icon:'🎫'},
     {id:'pbank',owner:'Πένυ',name:'Τράπεζα',balance:0,icon:'🏦'},
-    {id:'pcash',owner:'Πένυ',name:'Μετρητά',balance:0,icon:'💶'},
-    {id:'homecash',owner:'Κοινά',name:'Μετρητά σπιτιού',balance:0,icon:'🏠'}
+    {id:'homecash',owner:'Κοινά',name:'Μετρητά',balance:0,icon:'💶'}
   ],
   incomes:[
     {id:'i1',name:'Μισθός Μάνου',amount:1136,expectedWindow:'25–28',status:'expected',wallet:'mbank',type:'fixed'},
     {id:'i2',name:'Τηλεργασία',amount:23,expectedWindow:'25–28',status:'expected',wallet:'mbank',type:'fixed'},
     {id:'i3',name:'Ticket Restaurant',amount:100,expectedWindow:'25–28',status:'expected',wallet:'ticket',type:'fixed'},
-    {id:'i4',name:'Ενοίκιο',amount:250,expectedWindow:'1ο δεκαήμερο',status:'expected',wallet:'mbank',type:'fixed'},
-    {id:'i5',name:'Extra εργασία',amount:200,expectedWindow:'1ο δεκαήμερο',status:'expected',wallet:'mbank',type:'fixed'},
+    {id:'i4',name:'Ενοίκιο',amount:250,expectedWindow:'1ο δεκαήμερο',status:'expected',wallet:'homecash',type:'fixed'},
+    {id:'i5',name:'Extra εργασία',amount:200,expectedWindow:'1ο δεκαήμερο',status:'expected',wallet:'homecash',type:'fixed'},
     {id:'i6',name:'Μισθός Πένυς',amount:850,expectedWindow:'25–28',status:'expected',wallet:'pbank',type:'fixed'}
   ],
   expenses:[
@@ -170,6 +168,22 @@ const defaults={
 };
 
 let state=load();
+if(!state.walletCleanupV1){
+  const legacyCashIds=['mcash','pcash'];
+  const legacyTotal=(state.wallets||[]).filter(w=>legacyCashIds.includes(w.id)).reduce((s,w)=>s+Number(w.balance||0),0);
+  let shared=(state.wallets||[]).find(w=>w.id==='homecash');
+  if(!shared){
+    shared={id:'homecash',owner:'Κοινά',name:'Μετρητά',balance:0,icon:'💶'};
+    state.wallets.push(shared);
+  }
+  shared.owner='Κοινά'; shared.name='Μετρητά'; shared.icon='💶';
+  shared.balance=Number(shared.balance||0)+legacyTotal;
+  state.wallets=state.wallets.filter(w=>!legacyCashIds.includes(w.id));
+  const rentIncome=state.incomes?.find(i=>i.id==='i4'); if(rentIncome)rentIncome.wallet='homecash';
+  const extraIncome=state.incomes?.find(i=>i.id==='i5'); if(extraIncome)extraIncome.wallet='homecash';
+  state.walletCleanupV1=true;
+  localStorage.setItem(storeKey,JSON.stringify(state));
+}
 if(!state.dashboard)state.dashboard={presetVersion:2,sections:{}};
 if(Number(state.dashboard.presetVersion||0)<2){
   state.dashboard.presetVersion=2;
@@ -518,7 +532,7 @@ function fundPersonalFromShared(person){
  });
 }
 function personalMove(person,sign){const p=state.personal[person];showModal(`${sign>0?'Έξτρα έσοδο':'Έξοδο'} · ${p.name}`,`<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>Περιγραφή</label><input name="label" required placeholder="${sign>0?'π.χ. Κέρδος / Δώρο / Επιστροφή':'π.χ. Στοίχημα / Αγορά'}"></div><div class="field" style="grid-column:1/-1"><label>Σχόλιο / λόγος (προαιρετικό)</label><textarea name="note" placeholder="${sign>0?'π.χ. κέρδος από στοίχημα Ολυμπιακός - Ρεάλ':'π.χ. αγορά ακουστικών'}"></textarea></div></div>`,fd=>{const amt=Math.abs(Number(fd.get('amount')||0))*sign;if(sign<0&&p.balance<Math.abs(amt))return alert('Το προσωπικό υπόλοιπο δεν επαρκεί.'),false;p.balance+=amt;p.transactions.push({date:today,amount:amt,label:fd.get('label'),note:fd.get('note')||''})})}
-function personalTransfer(person){const p=state.personal[person];showModal(`Μεταφορά από ${p.name} στο κοινό`, `<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>Προορισμός</label><select name="dest"><option value="savings">Στην άκρη</option><option value="wallet">Κοινά μετρητά σπιτιού</option></select></div><div class="field" style="grid-column:1/-1"><label>Σημείωση</label><input name="label" value="Μεταφορά στο κοινό"></div></div>`,fd=>{const amt=Number(fd.get('amount')||0);if(amt>p.balance)return alert('Το προσωπικό υπόλοιπο δεν επαρκεί.'),false;p.balance-=amt;const dest=fd.get('dest');const tx={date:today,amount:-amt,label:fd.get('label'),transferDest:dest};if(dest==='savings'){state.savings+=amt;const sid='s'+Date.now()+Math.random().toString(36).slice(2,7);state.savingsTx.push({id:sid,date:today,amount:amt,label:`Από προσωπικό ${p.name}`,wallet:'homecash'});tx.linkedSavingsId=sid}else{wallet('homecash').balance+=amt;tx.destWallet='homecash'}p.transactions.push(tx)})}
+function personalTransfer(person){const p=state.personal[person];showModal(`Μεταφορά από ${p.name} στο κοινό`, `<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>Προορισμός</label><select name="dest"><option value="savings">Στην άκρη</option><option value="wallet">Κοινά μετρητά</option></select></div><div class="field" style="grid-column:1/-1"><label>Σημείωση</label><input name="label" value="Μεταφορά στο κοινό"></div></div>`,fd=>{const amt=Number(fd.get('amount')||0);if(amt>p.balance)return alert('Το προσωπικό υπόλοιπο δεν επαρκεί.'),false;p.balance-=amt;const dest=fd.get('dest');const tx={date:today,amount:-amt,label:fd.get('label'),transferDest:dest};if(dest==='savings'){state.savings+=amt;const sid='s'+Date.now()+Math.random().toString(36).slice(2,7);state.savingsTx.push({id:sid,date:today,amount:amt,label:`Από προσωπικό ${p.name}`,wallet:'homecash'});tx.linkedSavingsId=sid}else{wallet('homecash').balance+=amt;tx.destWallet='homecash'}p.transactions.push(tx)})}
 function deleteSavingsTx(index){
  const tx=state.savingsTx[index]; if(!tx)return;
  if(!confirm(`Να διαγραφεί η κίνηση «${tx.label}» (${euro(tx.amount)});`))return;
