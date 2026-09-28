@@ -1,9 +1,9 @@
 
 (()=>{
 const ENDPOINT='https://script.google.com/macros/s/AKfycbw6mVPR3XbfUn4YTVrBmLdezHi8IEBmmOBDfQjPXqZ4GePqsfaz9VWQZSMDQfZVfTPmCA/exec';
-const CHANNEL='mazi-sync-v1';
+const CHANNEL='mazi-sync-form-v1';
 const K={secret:'mazi-sync-secret-v1',actor:'mazi-sync-actor-v1',device:'mazi-sync-device-v1',version:'mazi-sync-version-v1',bound:'mazi-sync-bound-v1',dirty:'mazi-sync-dirty-v1'};
-let frame=null,ready=false,busy=false,seq=0,waiters=new Map(),pullTimer=null,pushTimer=null;
+let busy=false,waiters=new Map(),pullTimer=null,pushTimer=null;
 
 const get=k=>localStorage.getItem(k)||'';
 const set=(k,v)=>localStorage.setItem(k,String(v));
@@ -13,7 +13,7 @@ const bound=()=>get(K.bound)==='1';
 const dirty=()=>get(K.dirty)==='1';
 const version=()=>Number(get(K.version)||0);
 const setStatus=(st,txt)=>{const b=document.getElementById('syncStatusButton'),t=document.getElementById('syncStatusText');if(b)b.dataset.state=st||'';if(t)t.textContent=txt||'Sync';};
-const refresh=()=>{if(!secret())return setStatus('','Σύνδεση');if(!navigator.onLine)return setStatus('offline','Offline');if(dirty())return setStatus('pending','Αναμονή');if(ready&&bound())return setStatus('synced','✓ Sync');setStatus('working','Σύνδεση…');};
+const refresh=()=>{if(!secret())return setStatus('','Σύνδεση');if(!navigator.onLine)return setStatus('offline','Offline');if(dirty())return setStatus('pending','Αναμονή');if(bound())return setStatus('synced','✓ Sync');setStatus('working','Σύνδεση…');};
 const device=()=>{let id=get(K.device);if(!id){id=crypto.randomUUID?crypto.randomUUID():'d'+Date.now()+Math.random().toString(36).slice(2);set(K.device,id)}return id};
 const meaningful=()=>Boolean(state.setupComplete||Number(state.savings||0)||(state.wallets||[]).some(w=>Number(w.balance||0))||(state.incomes||[]).some(i=>i.status==='received')||(state.expenses||[]).some(e=>spentAmount(e)>0)||(state.personal?.manos?.transactions||[]).length||(state.personal?.penny?.transactions||[]).length);
 
@@ -24,9 +24,39 @@ async function key(sec,salt,it){const b=await crypto.subtle.importKey('raw',new 
 async function enc(obj){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),it=120000,k=await key(secret(),salt,it),pt=new TextEncoder().encode(JSON.stringify(obj)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,pt));return JSON.stringify({v:1,iter:it,salt:b64(salt),iv:b64(iv),ct:b64(ct)})}
 async function dec(payload){const e=JSON.parse(payload),salt=unb64(e.salt),iv=unb64(e.iv),ct=unb64(e.ct),k=await key(secret(),salt,Number(e.iter||120000)),pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},k,ct);return JSON.parse(new TextDecoder().decode(pt))}
 
-window.addEventListener('message',ev=>{if(!frame||ev.source!==frame.contentWindow)return;const m=ev.data||{};if(m.channel!==CHANNEL)return;if(m.type==='ready'){ready=true;refresh();return}if(m.type==='response'&&waiters.has(m.id)){const w=waiters.get(m.id);waiters.delete(m.id);clearTimeout(w.t);w.r(m.result)}});
-function bridge(){if(!frame){frame=document.createElement('iframe');frame.id='syncBridgeFrame';frame.src=ENDPOINT;frame.setAttribute('aria-hidden','true');document.body.appendChild(frame)}}
-function call(req){bridge();return new Promise((r,j)=>{const id='q'+Date.now()+(++seq),send=()=>{if(ready){const t=setTimeout(()=>{waiters.delete(id);j(new Error('Timeout sync'))},25000);waiters.set(id,{r,j,t});frame.contentWindow.postMessage({channel:CHANNEL,type:'request',id,request:req},'*')}else setTimeout(send,120)};send()})}
+window.addEventListener('message',ev=>{
+ const m=ev.data||{};
+ if(m.channel!==CHANNEL||m.type!=='response'||!m.id||!waiters.has(m.id))return;
+ const w=waiters.get(m.id);
+ waiters.delete(m.id);
+ clearTimeout(w.t);
+ w.cleanup();
+ w.r(m.result);
+});
+function call(req){
+ return new Promise((r,j)=>{
+   const id=crypto.randomUUID?crypto.randomUUID():'q'+Date.now()+Math.random().toString(36).slice(2);
+   const frameName='mazi_sync_'+id.replace(/[^a-zA-Z0-9_]/g,'');
+   const iframe=document.createElement('iframe');
+   iframe.name=frameName;
+   iframe.setAttribute('aria-hidden','true');
+   iframe.style.cssText='position:fixed;width:1px;height:1px;left:-10000px;top:-10000px;border:0;opacity:0;pointer-events:none';
+   const form=document.createElement('form');
+   form.method='POST';
+   form.action=ENDPOINT;
+   form.target=frameName;
+   form.style.display='none';
+   const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)};
+   add('id',id);
+   add('request',JSON.stringify(req));
+   const cleanup=()=>{try{form.remove()}catch{}setTimeout(()=>{try{iframe.remove()}catch{}},80)};
+   const t=setTimeout(()=>{waiters.delete(id);cleanup();j(new Error('Timeout sync'))},30000);
+   waiters.set(id,{r,j,t,cleanup});
+   document.body.appendChild(iframe);
+   document.body.appendChild(form);
+   form.submit();
+ });
+}
 const auth=()=>hex('mazi-auth-v1:'+secret());
 
 function applyRemote(remote,v){state=deepMerge(structuredClone(defaults),remote||{});localStorage.setItem(storeKey,JSON.stringify(state));set(K.version,v);set(K.bound,1);set(K.dirty,0);render();setStatus('synced','✓ Sync')}
@@ -113,7 +143,6 @@ window.maziSyncChanged=()=>{
  pushTimer=setTimeout(()=>push(false),900);
 };
 window.initMaziSync=()=>{
- bridge();
  refresh();
  const b=document.getElementById('syncStatusButton');
  if(b)b.onclick=settings;
