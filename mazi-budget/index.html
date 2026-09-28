@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Μαζί" />
   <link rel="manifest" href="manifest.webmanifest" />
   
-  <title>Μαζί — Οικονομικά v3.1</title>
+  <title>Μαζί — Οικονομικά v3.2</title>
   <style>
 :root{
   --bg:#09111f; --panel:#101a2c; --panel2:#152238; --soft:#1d2c46; --text:#f5f7fb; --muted:#8fa3bf;
@@ -48,6 +48,15 @@ main{padding:0 18px 24px}.grid{display:grid;gap:14px}.grid-2{grid-template-colum
 .allocation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.allocation-grid>div{padding:12px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.025)}.allocation-grid small{display:block;color:var(--muted);margin-bottom:5px}.allocation-grid strong{font-size:18px}
 .setup-title{margin:20px 0 9px;font-size:15px}.setup-list{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow:auto;padding-right:3px}.setup-item{display:grid;grid-template-columns:auto 1fr 115px;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--border);background:var(--panel2);border-radius:14px}.setup-item>input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue)}.setup-item span{min-width:0}.setup-item strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.setup-item small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.setup-amount{width:100%!important;padding:8px!important;text-align:right}.btn:disabled{opacity:.42;cursor:not-allowed}
 @media(max-width:560px){.allocation-grid{grid-template-columns:1fr}.setup-item{grid-template-columns:auto 1fr 92px}.section-head.compact{align-items:flex-start}.section-head.compact .big{font-size:23px}.modal-inner{max-height:86vh;overflow:auto}}
+.clean-summary{display:grid;grid-template-columns:1.25fr repeat(3,1fr);gap:12px}
+.summary-main{padding:20px!important}
+.summary-main .big{font-size:38px;margin:4px 0 7px}
+.summary-tile{padding:16px;border:1px solid var(--border);border-radius:18px;background:#fff;box-shadow:0 8px 22px rgba(39,60,86,.05)}
+.summary-tile small{display:block;color:var(--muted);margin-bottom:6px}
+.summary-tile strong{display:block;font-size:23px}
+.summary-tile span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+@media(max-width:820px){.clean-summary{grid-template-columns:repeat(2,1fr)}.summary-main{grid-column:1/-1}}
+@media(max-width:560px){.clean-summary{grid-template-columns:1fr}.summary-main{grid-column:auto}.summary-tile{padding:14px}}
 .dashboard-panel{margin-top:16px}
 .dashboard-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 9px}
 .dashboard-panel-head h2{margin:0;font-size:17px}
@@ -104,7 +113,7 @@ const defaults={
   setupComplete:false,
   savings:0,
   allocation:{savings:0,other:0,otherLabel:'Άλλο / ελεύθερα'},
-  dashboard:{sections:{overview:'open',stats:'open',allocation:'open',due:'open',wallets:'open',periodic:'open'}},
+  dashboard:{presetVersion:2,sections:{overview:'open',stats:'hidden',allocation:'collapsed',due:'open',wallets:'hidden',periodic:'hidden'}},
   wallets:[
     {id:'mbank',owner:'Μάνος',name:'Τράπεζα',balance:0,icon:'🏦'},
     {id:'mcash',owner:'Μάνος',name:'Μετρητά',balance:0,icon:'💶'},
@@ -160,7 +169,14 @@ const defaults={
   }
 };
 
-let state=load(); let screen='home'; let expenseFilter='all';
+let state=load();
+if(!state.dashboard)state.dashboard={presetVersion:2,sections:{}};
+if(Number(state.dashboard.presetVersion||0)<2){
+  state.dashboard.presetVersion=2;
+  state.dashboard.sections={overview:'open',stats:'hidden',allocation:'collapsed',due:'open',wallets:'hidden',periodic:'hidden'};
+  localStorage.setItem(storeKey,JSON.stringify(state));
+}
+let screen='home'; let expenseFilter='all';
 function load(){try{const s=JSON.parse(localStorage.getItem(storeKey));return s?deepMerge(structuredClone(defaults),s):structuredClone(defaults)}catch{return structuredClone(defaults)}}
 function deepMerge(base,override){if(Array.isArray(base))return Array.isArray(override)?override:base;if(base&&typeof base==='object'){for(const k of Object.keys(base)){if(override?.[k]!==undefined)base[k]=deepMerge(base[k],override[k])}for(const k of Object.keys(override||{})){if(base[k]===undefined)base[k]=override[k]}return base}return override??base}
 function save(){localStorage.setItem(storeKey,JSON.stringify(state));}
@@ -187,12 +203,12 @@ const titles={home:'Αρχική',income:'Έσοδα',expenses:'Έξοδα',savi
 function render(){document.getElementById('screenTitle').textContent=titles[screen];document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===screen));const app=document.getElementById('app');app.innerHTML=({home:homeView,income:incomeView,expenses:expensesView,savings:savingsView,personal:personalView,forecast:forecastView})[screen]();bind();}
 
 const dashboardSections=[
- ['overview','Σύνοψη τώρα'],
- ['stats','Γρήγορα σύνολα'],
+ ['overview','Βασική σύνοψη'],
+ ['stats','Αναλυτικά σύνολα'],
  ['allocation','Μοίρασμα υπολοίπου'],
- ['due','Τι πρέπει να πληρωθεί'],
- ['wallets','Πού βρίσκονται τα χρήματα'],
- ['periodic','Περιοδικά που περιμένουμε']
+ ['due','Κοντινές πληρωμές'],
+ ['wallets','Πορτοφόλια'],
+ ['periodic','Περιοδικά']
 ];
 function dashboardMode(id){return state.dashboard?.sections?.[id]||'open'}
 function dashboardPanel(id,title,body){
@@ -217,16 +233,33 @@ function allocationCard(){const rem=forecastMonth(),a=state.allocation||{savings
 
 function homeView(){
  const avail=availableNow(), free=spendableNow(), forecast=forecastMonth(); const expected=totalExpectedIncome(), exp=plannedExpenses();
- const dueSoon=state.expenses.filter(e=>e.due&&remainingExpense(e)>0).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+ const dueSoon=state.expenses.filter(e=>e.due&&remainingExpense(e)>0).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,3);
  const bankTotal=state.wallets.filter(w=>w.name==='Τράπεζα').reduce((a,w)=>a+Number(w.balance||0),0);
  const cashTotal=state.wallets.filter(w=>w.name.includes('Μετρητά')).reduce((a,w)=>a+Number(w.balance||0),0);
  const ticket=Number(wallet('ticket')?.balance||0);
 
- const overview=`<section class="home-overview" style="margin-bottom:0">
-   <div class="card available-card"><span class="badge blue">● Πραγματική εικόνα τώρα</span><div class="muted" style="margin-top:14px">Διαθέσιμα τώρα</div><div class="big">${euro(avail)}</div><div class="money-breakdown"><span>🏦 Τράπεζες ${euro(bankTotal)}</span><span>💶 Μετρητά ${euro(cashTotal)}</span><span>🎫 Ticket ${euro(ticket)}</span></div><div class="mini muted" style="margin-top:13px">Δεν περιλαμβάνει τα ${euro(state.savings)} που έχετε στην άκρη.</div></div>
-   <div class="overview-side"><div class="mini-kpi"><small>Ελεύθερα για κίνηση</small><strong class="${free>=0?'amount-pos':'amount-neg'}">${euro(free)}</strong><div class="mini muted">Διαθέσιμα μείον όσα εκκρεμούν ακόμη. Η αποταμίευση δεν αγγίζεται.</div></div><div class="mini-kpi"><small>Πρόβλεψη τέλους κύκλου</small><strong class="${forecast>=0?'amount-pos':'amount-neg'}">${forecast>=0?'+':''}${euro(forecast)}</strong><div class="mini muted">Έσοδα μείον όλα τα προγραμματισμένα έξοδα</div></div><div class="mini-kpi"><small>Εκκρεμούν ακόμη</small><strong class="amount-warn">${euro(pendingExpenses())}</strong><div class="mini muted">Έχουν ήδη ξοδευτεί ${euro(paidExpenses())}</div></div></div>
+ const overview=`<section class="clean-summary">
+   <div class="summary-main card available-card">
+     <div class="muted">Διαθέσιμα τώρα</div>
+     <div class="big">${euro(avail)}</div>
+     <div class="mini muted">Όσα υπάρχουν πραγματικά στα κοινά πορτοφόλια αυτή τη στιγμή.</div>
+   </div>
+   <div class="summary-tile">
+     <small>Ελεύθερα για κίνηση</small>
+     <strong class="${free>=0?'amount-pos':'amount-neg'}">${euro(free)}</strong>
+     <span>μετά τα εκκρεμή</span>
+   </div>
+   <div class="summary-tile">
+     <small>Εκκρεμούν</small>
+     <strong class="amount-warn">${euro(pendingExpenses())}</strong>
+     <span>να πληρωθούν ακόμη</span>
+   </div>
+   <div class="summary-tile">
+     <small>Στην άκρη</small>
+     <strong style="color:#7564a8">${euro(state.savings)}</strong>
+     <span>δεν αγγίζεται</span>
+   </div>
  </section>`;
-
  const stats=`<section class="stats" style="margin-top:0"><div class="stat"><small>Αναμενόμενα έσοδα</small><strong>${euro(expected)}</strong></div><div class="stat"><small>Έχουν ήδη μπει</small><strong class="amount-pos">${euro(receivedIncome())}</strong></div><div class="stat"><small>Σύνολο εξόδων</small><strong>${euro(exp)}</strong></div><div class="stat"><small>Στην άκρη</small><strong style="color:#c9b8ff">${euro(state.savings)}</strong></div></section>`;
 
  const due=`<section class="card"><div class="list">${dueSoon.length?dueSoon.map(expenseRow).join(''):'<div class="empty">Δεν υπάρχουν κοντινές λήξεις με ημερομηνία ακόμα.</div>'}</div></section>`;
@@ -236,7 +269,7 @@ function homeView(){
  const periodic=`<section class="card"><div class="list">${['ΔΕΗ','ΕΥΔΑΠ','Κοινόχρηστα'].map(n=>{const e=state.expenses.find(x=>x.name===n);return `<div class="row clickable" data-action="edit-expense" data-id="${e.id}"><div class="row-left"><div class="row-icon">🧾</div><div><div class="row-title">${n}</div><div class="row-sub">${e.status==='inactive'?'Δεν έχει έρθει ακόμα':`Καταχωρήθηκε${e.due?' · λήξη '+fmtDateLong(e.due):''}`}</div></div></div><div class="row-right"><strong>${e.status==='inactive'?'—':euro(expenseTotal(e))}</strong><span class="pill ${remainingExpense(e)===0&&e.status!=='inactive'?'paid':'pending'}">${e.status==='inactive'?'Αναμονή':remainingExpense(e)===0?'Πληρώθηκε':'Εκκρεμεί'}</span></div></div>`}).join('')}</div></section>`;
 
  return `${!state.setupComplete?`<section class="card setup-banner"><span class="badge orange">Πρώτη ρύθμιση</span><h2>Πού βρίσκεστε σήμερα;</h2><p class="muted">Συμπλήρωσε τι έχει ήδη μπει, τι έχει ήδη πληρωθεί και τα πραγματικά σημερινά υπόλοιπα. Έτσι δεν θα αφαιρέσουμε ή προσθέσουμε τίποτα δύο φορές.</p><button class="btn" data-action="initial-setup">Ξεκίνα αρχική κατάσταση</button></section>`:''}
- ${dashboardPanel('overview','Σύνοψη τώρα',overview)}
+ ${dashboardPanel('overview','Σύνοψη',overview)}
  ${dashboardPanel('stats','Γρήγορα σύνολα',stats)}
  ${dashboardPanel('allocation','Μοίρασμα υπολοίπου',allocationCard())}
  ${dashboardPanel('due','Τι πρέπει να πληρωθεί',due)}
