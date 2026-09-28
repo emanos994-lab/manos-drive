@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Μαζί" />
   <link rel="manifest" href="manifest.webmanifest" />
   
-  <title>Μαζί — Οικονομικά v2.9</title>
+  <title>Μαζί — Οικονομικά v3.0</title>
   <style>
 :root{
   --bg:#09111f; --panel:#101a2c; --panel2:#152238; --soft:#1d2c46; --text:#f5f7fb; --muted:#8fa3bf;
@@ -179,7 +179,7 @@ function homeView(){
  return `${!state.setupComplete?`<section class="card setup-banner"><span class="badge orange">Πρώτη ρύθμιση</span><h2>Πού βρίσκεστε σήμερα;</h2><p class="muted">Συμπλήρωσε τι έχει ήδη μπει, τι έχει ήδη πληρωθεί και τα πραγματικά σημερινά υπόλοιπα. Έτσι δεν θα αφαιρέσουμε ή προσθέσουμε τίποτα δύο φορές.</p><button class="btn" data-action="initial-setup">Ξεκίνα αρχική κατάσταση</button></section>`:''}
  <section class="home-overview">
    <div class="card available-card"><span class="badge blue">● Πραγματική εικόνα τώρα</span><div class="muted" style="margin-top:14px">Διαθέσιμα τώρα</div><div class="big">${euro(avail)}</div><div class="money-breakdown"><span>🏦 Τράπεζες ${euro(bankTotal)}</span><span>💶 Μετρητά ${euro(cashTotal)}</span><span>🎫 Ticket ${euro(ticket)}</span></div><div class="mini muted" style="margin-top:13px">Δεν περιλαμβάνει τα ${euro(state.savings)} που έχετε στην άκρη.</div></div>
-   <div class="overview-side"><div class="mini-kpi"><small>Ελεύθερα για κίνηση</small><strong class="${free>=0?'amount-pos':'amount-neg'}">${euro(free)}</strong><div class="mini muted">Διαθέσιμα μείον όσα εκκρεμούν ακόμη. Η αποταμίευση δεν αγγίζεται.</div></div><div class="mini-kpi"><small>Πρόβλεψη τέλους κύκλου</small><strong class="${forecast>=0?'amount-pos':'amount-neg'}">${forecast>=0?'+':''}${euro(forecast)}</strong><div class="mini muted">Έσοδα μείον όλα τα προγραμματισμένα έξοδα</div></div><div class="mini-kpi"><small>Εκκρεμούν ακόμη</small><strong class="amount-warn">${euro(pendingExpenses())}</strong><div class="mini muted">Έχουν ήδη ξοδευτεί / πληρωθεί ${euro(paidExpenses())}</div></div></div>
+   <div class="overview-side"><div class="mini-kpi"><small>Ελεύθερα για κίνηση</small><strong class="${free>=0?'amount-pos':'amount-neg'}">${euro(free)}</strong><div class="mini muted">Διαθέσιμα μείον όσα εκκρεμούν ακόμη. Η αποταμίευση δεν αγγίζεται.</div></div><div class="mini-kpi"><small>Πρόβλεψη τέλους κύκλου</small><strong class="${forecast>=0?'amount-pos':'amount-neg'}">${forecast>=0?'+':''}${euro(forecast)}</strong><div class="mini muted">Έσοδα μείον όλα τα προγραμματισμένα έξοδα</div></div><div class="mini-kpi"><small>Εκκρεμούν ακόμη</small><strong class="amount-warn">${euro(pendingExpenses())}</strong><div class="mini muted">Έχουν ήδη ξοδευτεί ${euro(paidExpenses())}</div></div></div>
  </section>
  <section class="stats"><div class="stat"><small>Αναμενόμενα έσοδα</small><strong>${euro(expected)}</strong></div><div class="stat"><small>Έχουν ήδη μπει</small><strong class="amount-pos">${euro(receivedIncome())}</strong></div><div class="stat"><small>Σύνολο εξόδων</small><strong>${euro(exp)}</strong></div><div class="stat"><small>Στην άκρη</small><strong style="color:#c9b8ff">${euro(state.savings)}</strong></div></section>${allocationCard()}
  <div class="section-head"><h2>Τι πρέπει να πληρωθεί</h2></div><section class="card"><div class="list">${dueSoon.length?dueSoon.map(expenseRow).join(''):'<div class="empty">Δεν υπάρχουν κοντινές λήξεις με ημερομηνία ακόμα.</div>'}</div></section>
@@ -192,7 +192,7 @@ function incomeView(){return `<div class="notice">Τα ποσά και οι ημ
 function expenseRow(e){
  const total=expenseTotal(e), spent=spentAmount(e), remaining=remainingExpense(e);
  const dates=e.due?`<div class="date-line"><span class="date-chip">⏰ Λήξη ${fmtDateLong(e.due)}</span></div>`:'';
- const progress=(e.status!=='inactive'&&(spent>0||remaining>0))?`<div class="row-sub" style="margin-top:4px"><strong>Ξοδεύτηκαν ${euro(spent)}</strong> · Μένουν <strong class="${remaining>0?'amount-warn':'amount-pos'}">${euro(remaining)}</strong></div>`:'';
+ const progress=(e.status!=='inactive'&&(spent>0||remaining>0))?`<div class="row-sub" style="margin-top:4px"><strong>Ξοδεύτηκαν ${euro(spent)}</strong> · Εκκρεμούν <strong class="${remaining>0?'amount-warn':'amount-pos'}">${euro(remaining)}</strong></div>`:'';
  const partial=spent>0&&remaining>0;
  return `<div class="row clickable" data-action="edit-expense" data-id="${e.id}"><div class="row-left"><div class="row-icon">${iconFor(e.category)}</div><div><div class="row-title">${esc(e.name)}</div><div class="row-sub">${esc(e.category)}${e.note?' · '+esc(e.note):''}</div>${progress}${dates}</div></div><div class="row-right"><strong>${e.status==='inactive'?'—':euro(total)}</strong><span class="pill ${remaining===0&&e.status!=='inactive'?'paid':e.status==='inactive'?'expected':'pending'}">${e.status==='inactive'?'Ανενεργό':remaining===0?'Πληρώθηκε':partial?'Μερικώς':'Εκκρεμεί'}</span></div></div>`
 }
@@ -275,44 +275,108 @@ function editIncome(i){const isNew=!i;i=i||{id:'i'+Date.now(),name:'',amount:0,e
 
 function editExpense(e){
  const isNew=!e;
- e=e||{id:'e'+Date.now(),name:'',planned:0,actual:0,spent:0,status:'pending',category:'Άλλο',recurring:'once',due:'',wallet:'mbank'};
- const currentTotal=expenseTotal(e), currentSpent=spentAmount(e);
+ e=e||{id:'e'+Date.now(),name:'',planned:0,actual:0,spent:0,spentApplied:0,status:'pending',category:'Άλλο',recurring:'once',due:'',wallet:'mbank'};
+ const totalNow=expenseTotal(e);
+ const spentNow=spentAmount(e);
+ const remainingNow=remainingExpense(e);
  showModal(isNew?'Νέο έξοδο':'Επεξεργασία εξόδου',`<div class="form-grid">
    <div class="field"><label>Περιγραφή</label><input name="name" required value="${esc(e.name)}"></div>
-   <div class="field"><label>Συνολικό ποσό / budget</label><input name="actual" type="number" min="0" step="0.01" required value="${currentTotal}"></div>
-   <div class="field"><label>Έχει ήδη ξοδευτεί</label><input name="spent" type="number" min="0" step="0.01" value="${currentSpent}"></div>
+   <div class="field"><label>Συνολικό budget</label><input name="actual" type="number" min="0" step="0.01" required value="${totalNow}"></div>
+   <div class="field"><label>Έχουν ήδη ξοδευτεί</label><input type="text" value="${euro(spentNow)}" readonly></div>
+   <div class="field"><label>Μένουν</label><input type="text" id="remainingReadonly" value="${euro(remainingNow)}" readonly></div>
+   <div class="field"><label>Νέα κίνηση τώρα</label><input name="newSpend" type="number" min="0" step="0.01" value="0" placeholder="π.χ. 80"></div>
    <div class="field"><label>Κατηγορία</label><input name="category" value="${esc(e.category||'Άλλο')}"></div>
    <div class="field"><label>Λήξη για υπενθύμιση</label><input name="due" type="date" value="${e.due||''}"></div>
    <div class="field"><label>Κατάσταση</label><select name="status"><option value="pending" ${e.status==='pending'?'selected':''}>Εκκρεμεί / μερικώς</option><option value="paid" ${e.status==='paid'?'selected':''}>Πληρώθηκε όλο</option><option value="inactive" ${e.status==='inactive'?'selected':''}>Δεν έχει έρθει ακόμα</option></select></div>
-   <div class="field"><label>Οι αγορές / πληρωμές βγαίνουν από</label><select name="wallet">${walletOptions(e.wallet||'mbank')}</select></div>
+   <div class="field"><label>Η νέα κίνηση βγαίνει από</label><select name="wallet">${walletOptions(e.wallet||'mbank')}</select></div>
    <div class="field" style="grid-column:1/-1"><label>Σημείωση</label><textarea name="note" placeholder="π.χ. τσιγάρα μήνα / λογαριασμός / αγορά για σπίτι">${esc(e.note||'')}</textarea></div>
  </div>
  <div class="notice" id="expenseRemainingPreview" style="margin-top:12px"></div>`,fd=>{
+   const oldTotal=expenseTotal(e);
    const oldSpent=spentAmount(e);
-   const hadSpendTracking=e.spent!==undefined||e.spentApplied!==undefined||Boolean(e.posted);
-   const appliedOld=e.spentApplied!==undefined?Number(e.spentApplied||0):(e.posted?oldSpent:0);
    const total=Math.max(0,Number(fd.get('actual')||0));
    const selectedStatus=fd.get('status');
-   let spent=Math.max(0,Number(fd.get('spent')||0));
-   if(selectedStatus==='inactive')spent=0;
-   if(selectedStatus==='paid')spent=total;
-   if(spent>total+0.001){alert('Το ποσό που έχει ήδη ξοδευτεί δεν μπορεί να είναι μεγαλύτερο από το συνολικό budget.');return false;}
+   let newSpend=Math.max(0,Number(fd.get('newSpend')||0));
    const newWallet=fd.get('wallet')||'mbank';
-   const finalStatus=selectedStatus==='inactive'?'inactive':(total>0&&spent>=total?'paid':'pending');
-   const baselineEntry=!hadSpendTracking&&selectedStatus==='pending'&&spent>0;
-   const delta=baselineEntry?0:(spent-appliedOld);
-   if(Math.abs(delta)>0.001){
-     const w=wallet(newWallet)||wallet('mbank');
-     if(w){w.balance-=delta;}
-     state.activity.push({date:today,label:`${spent<total?'Μερική κίνηση':'Έξοδο'}: ${fd.get('name')}`,amount:-delta});
+
+   if(total<oldSpent-0.001){
+     alert(`Το συνολικό budget δεν μπορεί να γίνει μικρότερο από όσα έχουν ήδη ξοδευτεί (${euro(oldSpent)}).`);
+     return false;
    }
-   Object.assign(e,{name:fd.get('name'),actual:total,planned:isNew?total:(e.planned||total),spent,spentApplied:spent,category:fd.get('category'),due:fd.get('due')||'',status:finalStatus,wallet:newWallet,note:fd.get('note')||'',posted:spent>0});
+   if(selectedStatus==='inactive'){
+     if(oldSpent>0||newSpend>0){
+       alert('Έξοδο με ήδη καταχωρημένες κινήσεις δεν μπορεί να γίνει ανενεργό.');
+       return false;
+     }
+     newSpend=0;
+   }
+   if(selectedStatus==='paid'){
+     newSpend=Math.max(0,total-oldSpent);
+   }
+   if(oldSpent+newSpend>total+0.001){
+     alert(`Η νέα κίνηση είναι μεγαλύτερη από το υπόλοιπο του εξόδου. Απομένουν ${euro(Math.max(0,total-oldSpent))}.`);
+     return false;
+   }
+
+   const w=wallet(newWallet)||wallet('mbank');
+   if(newSpend>0){
+     if(!w){alert('Δεν βρέθηκε το πορτοφόλι πληρωμής.');return false;}
+     if(Number(w.balance||0)<newSpend){
+       alert(`Το πορτοφόλι έχει ${euro(w.balance)} και η κίνηση είναι ${euro(newSpend)}.`);
+       return false;
+     }
+     w.balance-=newSpend;
+   }
+
+   const newSpent=oldSpent+newSpend;
+   const finalStatus=selectedStatus==='inactive'?'inactive':(total>0&&newSpent>=total-0.001?'paid':'pending');
+   Object.assign(e,{
+     name:fd.get('name'),
+     actual:total,
+     planned:isNew?total:(e.planned||total),
+     spent:newSpent,
+     spentApplied:newSpent,
+     category:fd.get('category'),
+     due:fd.get('due')||'',
+     status:finalStatus,
+     wallet:newWallet,
+     note:fd.get('note')||'',
+     posted:newSpent>0
+   });
+
+   if(newSpend>0){
+     state.activity.push({
+       date:today,
+       label:`${newSpent>=total?'Πληρωμή':'Μερική κίνηση'}: ${e.name}`,
+       amount:-newSpend,
+       expenseId:e.id,
+       wallet:newWallet
+     });
+   }
    if(isNew)state.expenses.push(e);
  });
  const d=document.getElementById('modal');
- const totalInput=d.querySelector('[name="actual"]'),spentInput=d.querySelector('[name="spent"]'),statusInput=d.querySelector('[name="status"]'),preview=d.querySelector('#expenseRemainingPreview');
- const refreshPreview=()=>{const total=Math.max(0,Number(totalInput?.value||0));let spent=Math.max(0,Number(spentInput?.value||0));const st=statusInput?.value;if(st==='paid')spent=total;if(st==='inactive'){preview.innerHTML='Το έξοδο είναι σε αναμονή και <strong>δεν δεσμεύει χρήματα</strong> ακόμη.';return;}const rem=Math.max(0,total-spent);preview.innerHTML=`Έχουν ήδη ξοδευτεί <strong>${euro(spent)}</strong>. Παραμένουν <strong>${euro(rem)}</strong> δεσμευμένα από τα διαθέσιμα χρήματα για κίνηση. Η αποταμίευση δεν επηρεάζεται.${e.spent===undefined&&!e.posted&&st==='pending'&&spent>0?' Η πρώτη καταχώρηση ήδη ξοδεμένου ποσού θεωρείται ότι περιλαμβάνεται στο σημερινό υπόλοιπο, οπότε δεν αφαιρείται δεύτερη φορά.':''}`;};
- [totalInput,spentInput,statusInput].forEach(x=>x&&x.addEventListener('input',refreshPreview));
+ const totalInput=d.querySelector('[name="actual"]');
+ const newSpendInput=d.querySelector('[name="newSpend"]');
+ const statusInput=d.querySelector('[name="status"]');
+ const preview=d.querySelector('#expenseRemainingPreview');
+ const remainingReadonly=d.querySelector('#remainingReadonly');
+ const refreshPreview=()=>{
+   const total=Math.max(0,Number(totalInput?.value||0));
+   let add=Math.max(0,Number(newSpendInput?.value||0));
+   const st=statusInput?.value;
+   if(st==='paid')add=Math.max(0,total-spentNow);
+   if(st==='inactive'){
+     if(remainingReadonly)remainingReadonly.value=euro(0);
+     preview.innerHTML='Το έξοδο είναι σε αναμονή και <strong>δεν δεσμεύει χρήματα</strong> ακόμη.';
+     return;
+   }
+   const after=Math.min(total,spentNow+add);
+   const rem=Math.max(0,total-after);
+   if(remainingReadonly)remainingReadonly.value=euro(rem);
+   preview.innerHTML=`Μετά τη νέα κίνηση θα έχουν ξοδευτεί <strong>${euro(after)}</strong> και θα απομένουν <strong>${euro(rem)}</strong>. Η νέα κίνηση αφαιρείται από το επιλεγμένο κοινό πορτοφόλι. Η αποταμίευση δεν επηρεάζεται.`;
+ };
+ [totalInput,newSpendInput,statusInput].forEach(x=>x&&x.addEventListener('input',refreshPreview));
  refreshPreview();
 }
 function adjustWallet(id){const w=wallet(id);showModal('Διόρθωση υπολοίπου',`<div class="notice">Γράψε το πραγματικό ποσό που βλέπεις τώρα. Η διαφορά θα καταγραφεί ως διόρθωση ώστε το app να συμφωνεί με την πραγματικότητα.</div><div class="field" style="margin-top:14px"><label>${esc(w.owner)} · ${esc(w.name)}</label><input name="balance" type="number" step="0.01" value="${w.balance}" required></div><div class="field" style="margin-top:12px"><label>Σημείωση (προαιρετικό)</label><input name="note" placeholder="π.χ. χειροκίνητος έλεγχος τράπεζας"></div>`,fd=>{const next=Number(fd.get('balance')||0),diff=next-w.balance;w.balance=next;state.activity.push({date:today,label:`Διόρθωση ${w.owner} · ${w.name}${fd.get('note')?' — '+fd.get('note'):''}`,amount:diff})})}
