@@ -15,7 +15,7 @@ const version=()=>Number(get(K.version)||0);
 const setStatus=(st,txt)=>{const b=document.getElementById('syncStatusButton'),t=document.getElementById('syncStatusText');if(b)b.dataset.state=st||'';if(t)t.textContent=txt||'Sync';};
 const refresh=()=>{if(!secret())return setStatus('','Σύνδεση');if(!navigator.onLine)return setStatus('offline','Offline');if(dirty())return setStatus('pending','Αναμονή');if(bound())return setStatus('synced','✓ Sync');setStatus('working','Σύνδεση…');};
 const device=()=>{let id=get(K.device);if(!id){id=crypto.randomUUID?crypto.randomUUID():'d'+Date.now()+Math.random().toString(36).slice(2);set(K.device,id)}return id};
-const meaningful=()=>Boolean(state.setupComplete||Number(state.savings||0)||(state.wallets||[]).some(w=>Number(w.balance||0))||(state.incomes||[]).some(i=>i.status==='received')||(state.expenses||[]).some(e=>spentAmount(e)>0)||(state.personal?.manos?.transactions||[]).length||(state.personal?.penny?.transactions||[]).length);
+const meaningful=()=>state?.schema===5?Boolean(Object.keys(state.months||{}).length||Number(state.savings||0)||(state.tests||[]).length):Boolean(state.setupComplete||Number(state.savings||0)||(state.wallets||[]).some(w=>Number(w.balance||0))||(state.incomes||[]).length||(state.expenses||[]).length);
 
 const b64=u=>{let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode(...u.subarray(i,i+32768));return btoa(s)};
 const unb64=s=>{const x=atob(s),u=new Uint8Array(x.length);for(let i=0;i<x.length;i++)u[i]=x.charCodeAt(i);return u};
@@ -59,7 +59,7 @@ function call(req){
 }
 const auth=()=>hex('mazi-auth-v1:'+secret());
 
-function applyRemote(remote,v){state=deepMerge(structuredClone(defaults),remote||{});localStorage.setItem(storeKey,JSON.stringify(state));set(K.version,v);set(K.bound,1);set(K.dirty,0);render();setStatus('synced','✓ Sync')}
+function applyRemote(remote,v){state=window.maziNormalizeState?window.maziNormalizeState(remote||{}):(remote||{});localStorage.setItem(storeKey,JSON.stringify(state));set(K.version,v);set(K.bound,1);set(K.dirty,0);render();setStatus('synced','✓ Sync')}
 async function pull(initial=false){
  if(!secret()||!navigator.onLine||busy||dirty())return;
  busy=true;setStatus('working','Sync…');
