@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Μαζί">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Μαζί — Οικονομικά v5.0</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#1f3147;--muted:#78899d;--line:#e3e9f1;--blue:#8bbcf2;--blue2:#dcecff;--green:#3aaa78;--red:#d35d69;--orange:#d99a43;--orange2:#fff3df;--shadow:0 14px 40px rgba(45,62,86,.08)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding-bottom:38px}
+.shell{max-width:960px;margin:0 auto;padding:0 16px}.topbar{position:sticky;top:0;z-index:10;background:rgba(245,247,251,.94);backdrop-filter:blur(14px);display:flex;justify-content:space-between;align-items:center;padding:18px 0 10px}.eyebrow{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}.topbar h1{margin:2px 0 0;font-size:28px}
+.sync-status-btn{border:1px solid var(--line);background:#fff;color:var(--text);height:42px;border-radius:14px;padding:0 12px;display:flex;align-items:center;gap:8px;font-weight:800}.sync-dot{width:8px;height:8px;border-radius:50%;background:#a9b4c1}.sync-status-btn[data-state="synced"] .sync-dot{background:var(--green)}.sync-status-btn[data-state="working"] .sync-dot,.sync-status-btn[data-state="pending"] .sync-dot{background:var(--orange)}.sync-status-btn[data-state="error"] .sync-dot,.sync-status-btn[data-state="offline"] .sync-dot{background:var(--red)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:6px;background:#eaf0f6;border-radius:17px;margin:4px 0 14px}.tabs button{border:0;background:transparent;padding:11px;border-radius:12px;font:inherit;font-weight:850;color:#60758b;cursor:pointer}.tabs button.active{background:#fff;color:var(--text);box-shadow:0 5px 16px rgba(40,60,82,.08)}
+.workspace{background:#fff;border:1px solid var(--line);border-radius:20px;padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow)}.workspace-row{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}.workspace-group{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:11px;color:var(--muted);font-weight:800}.field input,.field select{border:1px solid #d8e1eb;background:#fff;color:var(--text);border-radius:11px;padding:9px 10px;font:inherit}.month-title{font-size:18px;font-weight:900;margin:0}.mini{font-size:12px;color:var(--muted)}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 14px}.kpi{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;box-shadow:var(--shadow)}.kpi small{display:block;color:var(--muted);font-weight:750;margin-bottom:6px}.kpi strong{font-size:23px}.kpi.remain{background:linear-gradient(145deg,#eef7ff,#fff);border-color:#cfe4fa}.kpi.savings{background:linear-gradient(145deg,#effaf5,#fff);border-color:#d2eee0}.kpi.test{background:linear-gradient(145deg,#fff7e8,#fff);border-color:#f2d8aa}
+.section{background:#fff;border:1px solid var(--line);border-radius:23px;padding:17px;margin:13px 0;box-shadow:var(--shadow)}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.section h2{font-size:18px;margin:0}.section p{font-size:12px;color:var(--muted);margin:4px 0 0}.list{display:flex;flex-direction:column;gap:8px}.money-row{display:grid;grid-template-columns:minmax(0,1fr) 120px 38px;gap:9px;align-items:center;padding:10px 11px;border:1px solid var(--line);border-radius:15px;background:#fbfcfe}.money-row.recurring{grid-template-columns:30px minmax(0,1fr) 120px}.money-row.off{opacity:.48;background:#f5f6f8}.money-row label{font-weight:760;min-width:0}.money-row input[type=number]{width:100%;border:1px solid #d9e1eb;background:#fff;border-radius:11px;padding:9px 10px;font:inherit;text-align:right;color:var(--text)}.money-row input[type=checkbox]{width:19px;height:19px;accent-color:var(--blue)}
+.remove{border:0;background:#fff1f2;color:var(--red);width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer}.btn{border:0;border-radius:12px;padding:9px 12px;font:inherit;font-weight:820;cursor:pointer}.btn.primary{background:var(--blue);color:#183751}.btn.soft{background:var(--blue2);color:#285276}.btn.green{background:#dff4e8;color:#236847}.btn.ghost{background:#f3f6f9;color:#53677e}.btn.warn{background:var(--orange2);color:#865f27}.btn.danger{background:#fff0f1;color:#a7414d}.btn.small{padding:7px 9px;font-size:12px}.total-line{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-weight:850}.total-line strong{font-size:19px}
+.save-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.save-card{border:1px solid var(--line);border-radius:17px;padding:14px;background:#fbfcfe}.save-card small{display:block;color:var(--muted);margin-bottom:5px}.save-card strong{font-size:24px}.save-form{display:flex;gap:7px;margin-top:10px}.save-form input{flex:1;min-width:0;border:1px solid #d9e1eb;background:#fff;border-radius:11px;padding:10px;font:inherit;text-align:right}.history{margin-top:12px;display:flex;flex-direction:column;gap:7px}.history-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:#f7f9fc;font-size:12px}.history-actions{display:flex;align-items:center;gap:7px}.positive{color:var(--green)}.negative{color:var(--red)}.notice{padding:12px 13px;border-radius:14px;background:#eef7ff;color:#45647f;border:1px solid #d4e7f9;font-size:12px}.notice.test-note{background:var(--orange2);border-color:#efd6aa;color:#7f5b28;margin-bottom:12px;font-weight:700}
+.test-list{display:flex;gap:8px;overflow:auto;padding:2px 0 10px}.test-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 11px;font-weight:780;color:#60758b;white-space:nowrap;cursor:pointer}.test-chip.active{background:var(--orange2);border-color:#efd6aa;color:#805c28}.empty{padding:28px;text-align:center;color:var(--muted)}
+.modal{width:min(520px,calc(100% - 24px));border:1px solid var(--line);border-radius:23px;background:#fff;color:var(--text);padding:0;box-shadow:0 30px 90px rgba(0,0,0,.18)}.modal::backdrop{background:rgba(24,36,52,.35);backdrop-filter:blur(4px)}.modal-inner{padding:19px}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h2{margin:0;font-size:20px}.close{border:0;background:#f2f5f8;width:35px;height:35px;border-radius:10px}.modal-body{margin-top:13px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}
+@media(max-width:720px){.summary{grid-template-columns:1fr 1fr}.save-grid{grid-template-columns:1fr}.kpi strong{font-size:21px}.topbar h1{font-size:24px}}
+@media(max-width:520px){.shell{padding:0 11px}.section{padding:13px;border-radius:19px}.money-row{grid-template-columns:minmax(0,1fr) 102px 34px;padding:8px}.money-row.recurring{grid-template-columns:26px minmax(0,1fr) 102px}.workspace{padding:11px}.workspace-group{width:100%}.workspace-group .field{flex:1}.workspace-group input,.workspace-group select{width:100%}.sync-status-btn{width:42px;padding:0;justify-content:center}.sync-status-btn span:last-child{display:none}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <div><div class="eyebrow">Κοινά οικονομικά</div><h1>Μαζί</h1></div>
+  <button class="sync-status-btn" id="syncStatusButton" type="button"><span class="sync-dot"></span><span id="syncStatusText">Σύνδεση</span></button>
+</header>
+
+<div class="tabs">
+  <button id="tabReal" class="active" type="button">Πραγματικοί μήνες</button>
+  <button id="tabTest" type="button">Υπολογισμοί Τεστ</button>
+</div>
+
+<main id="app"></main>
+</div>
+<dialog id="modal" class="modal"></dialog>
+
+<script>
+const storeKey='mazi-budget-v2';
+const euro=n=>new Intl.NumberFormat('el-GR',{style:'currency',currency:'EUR'}).format(Number(n||0));
+const isoToday=()=>new Date().toISOString().slice(0,10);
+const monthNow=()=>isoToday().slice(0,7);
+const monthLabel=k=>{const d=new Date(k+'-01T12:00:00');return d.toLocaleDateString('el-GR',{month:'long',year:'numeric'})};
+const esc=s=>String(s==null?'':s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+const incomeBase=[
+ ['i1','Μισθός Μάνου',1136],['i2','Τηλεργασία',23],['i3','Ticket Restaurant',100],['i4','Ενοίκιο',250],['i5','Extra εργασία',200],['i6','Μισθός Πένυς',850]
+];
+const expenseBase=[
+ ['e1','Δάνειο Πένυ',157],['e2','Δάνειο αυτοκινήτου',168],['e3','Δάνειο επίπλων',98],['e4','Πιστωτική κάρτα',70.83],['e5','COSMOTE',50],['e6','Νύχια',50],['e7','Ασφάλεια αυτοκινήτου',35],['e8','Λαϊκή',50],['e9','Κρέατα',50],['e10','Βενζίνη',100],['e11','Γιατρός Μάνου',80],['e12','Γιατρός Πένυς',35],['e13','Καφέδες',50],['e14','Τσιγάρα Μάνος',150],['e15','Τσιγάρα Πένυ',150],['e16','Supermarket',325],['e17','Προσωπικά Μάνου',100],['e18','Προσωπικά Πένυ',100],['e19','ΔΕΗ',0],['e20','ΕΥΔΑΠ',0],['e21','Κοινόχρηστα',0]
+];
+
+function baseMonth(key){
+ return {key,calculationDate:key+'-01',incomes:incomeBase.map(x=>({id:x[0],name:x[1],amount:x[2]})),expenses:expenseBase.map(x=>({id:x[0],name:x[1],amount:x[2],active:true})),extraIncomes:[],extraExpenses:[]};
+}
+const defaults={schema:5,activeMonth:monthNow(),months:{},savings:0,savingsTx:[],tests:[],activeTestId:null};
+defaults.months[defaults.activeMonth]=baseMonth(defaults.activeMonth);
+
+function normalizeState(raw){
+ if(raw&&raw.schema===5){
+   const out=raw;
+   out.months=out.months||{};
+   out.activeMonth=out.activeMonth||Object.keys(out.months)[0]||monthNow();
+   if(!out.months[out.activeMonth])out.months[out.activeMonth]=baseMonth(out.activeMonth);
+   out.tests=Array.isArray(out.tests)?out.tests:[];
+   out.savingsTx=Array.isArray(out.savingsTx)?out.savingsTx:[];
+   out.savings=Number(out.savings||0);
+   return out;
+ }
+ const out=structuredClone(defaults);
+ if(!raw||typeof raw!=='object')return out;
+ const key=(raw.calculationDate||isoToday()).slice(0,7);
+ out.activeMonth=key;
+ const m=baseMonth(key);
+ const oldInc=Array.isArray(raw.incomes)?raw.incomes:[];
+ m.incomes.forEach(i=>{const x=oldInc.find(o=>o.id===i.id||o.name===i.name);if(x)i.amount=Number(x.amount||0)});
+ const oldExp=Array.isArray(raw.expenses)?raw.expenses:[];
+ m.expenses.forEach(e=>{const x=oldExp.find(o=>o.id===e.id||o.name===e.name);if(x){e.amount=Number(x.amount!=null?x.amount:(x.actual!=null?x.actual:(x.planned||0)));e.active=true}});
+ m.extraIncomes=Array.isArray(raw.extraIncomes)?raw.extraIncomes.map(x=>({id:x.id||uid(),name:x.name||'Άλλο',amount:Number(x.amount||0)})):[];
+ m.extraExpenses=Array.isArray(raw.extraExpenses)?raw.extraExpenses.map(x=>({id:x.id||uid(),name:x.name||'Άλλο',amount:Number(x.amount||0)})):[];
+ m.calculationDate=raw.calculationDate||key+'-01';
+ out.months={[key]:m};
+ out.savings=Number(raw.savings||0);
+ out.savingsTx=(Array.isArray(raw.savingsTx)?raw.savingsTx:[]).map(x=>({id:x.id||uid(),date:x.date||isoToday(),monthKey:x.monthKey||key,label:x.label||'Κίνηση',amount:Number(x.amount||0)}));
+ return out;
+}
+window.maziNormalizeState=normalizeState;
+function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function load(){try{return normalizeState(JSON.parse(localStorage.getItem(storeKey)))}catch{return normalizeState(null)}}
+let state=load(),view='real';
+
+function save(){localStorage.setItem(storeKey,JSON.stringify(state));if(window.maziSyncChanged)window.maziSyncChanged()}
+function curMonth(){if(!state.months[state.activeMonth])state.months[state.activeMonth]=baseMonth(state.activeMonth);return state.months[state.activeMonth]}
+function sum(arr){return (arr||[]).reduce((s,x)=>s+Number(x.amount||0),0)}
+function realIncome(m){return sum(m.incomes)+sum(m.extraIncomes)}
+function realExpense(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,x)=>s+Number(x.amount||0),0)+sum(m.extraExpenses)}
+function monthSavingsNet(key){return (state.savingsTx||[]).filter(x=>x.monthKey===key).reduce((s,x)=>s+Number(x.amount||0),0)}
+function realRemain(m){return realIncome(m)-realExpense(m)-monthSavingsNet(m.key)}
+function fmtDate(d){if(!d)return '—';return new Date(d+'T12:00:00').toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric'})}
+
+function recurringRow(x,kind,testMode){
+ const prefix=testMode?'t':'r';
+ return '<div class="money-row recurring '+(x.active===false?'off':'')+'"><input type="checkbox" '+(x.active===false?'':'checked')+' data-toggle="'+prefix+'-'+kind+'" data-id="'+x.id+'"><label>'+esc(x.name)+'</label><input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="'+prefix+'-'+kind+'" data-id="'+x.id+'"></div>';
+}
+function simpleRow(x,kind,testMode){
+ const prefix=testMode?'t':'r';
+ return '<div class="money-row"><label>'+esc(x.name)+'</label><input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="'+prefix+'-'+kind+'" data-id="'+x.id+'"><button class="remove" data-remove="'+prefix+'-'+kind+'" data-id="'+x.id+'" title="Αφαίρεση">×</button></div>';
+}
+function incomeRow(x,kind,testMode,fixed){
+ const prefix=testMode?'t':'r';
+ const remove=fixed?'':'<button class="remove" data-remove="'+prefix+'-'+kind+'" data-id="'+x.id+'">×</button>';
+ return '<div class="money-row '+(fixed?'recurring':'')+'" style="'+(fixed?'grid-template-columns:minmax(0,1fr) 120px':'')+'"><label>'+esc(x.name)+'</label><input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="'+prefix+'-'+kind+'" data-id="'+x.id+'">'+remove+'</div>';
+}
+
+function render(){
+ document.getElementById('tabReal').classList.toggle('active',view==='real');
+ document.getElementById('tabTest').classList.toggle('active',view==='test');
+ document.getElementById('app').innerHTML=view==='real'?realView():testView();
+ bind();
+}
+function monthOptions(){
+ return Object.keys(state.months).sort().reverse().map(k=>'<option value="'+k+'" '+(k===state.activeMonth?'selected':'')+'>'+esc(monthLabel(k))+'</option>').join('');
+}
+function realView(){
+ const m=curMonth(),inc=realIncome(m),exp=realExpense(m),net=monthSavingsNet(m.key),rem=realRemain(m);
+ const hist=(state.savingsTx||[]).slice().reverse().slice(0,10);
+ return '<section class="workspace"><div class="workspace-row"><div><div class="mini">Ενεργός μήνας</div><h2 class="month-title">'+esc(monthLabel(m.key))+'</h2></div><div class="workspace-group"><div class="field"><label>Μήνας</label><select id="monthSelect">'+monthOptions()+'</select></div><button class="btn soft" id="newMonth">+ Νέος μήνας</button><div class="field"><label>Ημερομηνία υπολογισμού</label><input id="calcDate" type="date" value="'+esc(m.calculationDate||'')+'"></div></div></div></section>'+
+ '<section class="summary"><div class="kpi"><small>Έσοδα</small><strong>'+euro(inc)+'</strong></div><div class="kpi"><small>Έξοδα</small><strong>'+euro(exp)+'</strong></div><div class="kpi remain"><small>Μένουν μετά την άκρη</small><strong class="'+(rem<0?'negative':'')+'">'+euro(rem)+'</strong></div><div class="kpi savings"><small>Συνολικά στην άκρη</small><strong>'+euro(state.savings)+'</strong></div></section>'+
+ '<section class="section"><div class="section-head"><div><h2>Έσοδα</h2><p>Κάθε μήνας έχει τα δικά του ποσά.</p></div><button class="btn soft" data-add="r-income">+ Άλλο</button></div><div class="list">'+m.incomes.map(x=>incomeRow(x,'income',false,true)).join('')+m.extraIncomes.map(x=>incomeRow(x,'extraIncome',false,false)).join('')+'</div><div class="total-line"><span>Σύνολο εσόδων</span><strong>'+euro(inc)+'</strong></div></section>'+
+ '<section class="section"><div class="section-head"><div><h2>Πάγια & έξοδα</h2><p>Τα πάγια δεν διαγράφονται. Ξετικάρεις όποιο δεν ισχύει μόνο για αυτόν τον μήνα.</p></div><button class="btn soft" data-add="r-expense">+ Άλλο</button></div><div class="list">'+m.expenses.map(x=>recurringRow(x,'expense',false)).join('')+m.extraExpenses.map(x=>simpleRow(x,'extraExpense',false)).join('')+'</div><div class="total-line"><span>Σύνολο εξόδων</span><strong>'+euro(exp)+'</strong></div></section>'+
+ '<section class="section"><div class="section-head"><div><h2>Αποταμίευση</h2><p>Οι κινήσεις εδώ είναι πραγματικές και επηρεάζουν το υπόλοιπο του μήνα.</p></div></div><div class="save-grid"><div class="save-card"><small>Μένουν διαθέσιμα</small><strong>'+euro(rem)+'</strong><div class="save-form"><input id="saveAmount" type="number" min="0" step="0.01" placeholder="Ποσό"><button class="btn green" id="saveMoney">Στην άκρη</button></div></div><div class="save-card"><small>Στην άκρη συνολικά</small><strong>'+euro(state.savings)+'</strong><div class="save-form"><input id="takeAmount" type="number" min="0" step="0.01" placeholder="Ποσό"><button class="btn ghost" id="takeMoney">Αφαίρεση</button></div></div></div><div class="mini" style="margin-top:10px">Καθαρή μεταφορά αυτού του μήνα: <strong>'+euro(net)+'</strong></div><div class="history">'+hist.map(x=>'<div class="history-row"><span>'+esc(x.label)+' · '+esc(fmtDate(x.date))+' · '+esc(monthLabel(x.monthKey||m.key))+'</span><div class="history-actions"><strong class="'+(Number(x.amount)>=0?'positive':'negative')+'">'+(Number(x.amount)>=0?'+':'')+euro(x.amount)+'</strong><button class="remove" style="width:29px;height:29px" data-remove-saving="'+esc(x.id)+'">×</button></div></div>').join('')+'</div></section>';
+}
+
+function cloneForTest(source){
+ return {id:uid(),title:'Τεστ '+new Date().toLocaleDateString('el-GR'),date:isoToday(),sourceMonth:source.key,incomes:structuredClone(source.incomes),expenses:structuredClone(source.expenses),extraIncomes:structuredClone(source.extraIncomes),extraExpenses:structuredClone(source.extraExpenses),plannedSavings:0};
+}
+function activeTest(){return state.tests.find(x=>x.id===state.activeTestId)||null}
+function testIncome(t){return sum(t.incomes)+sum(t.extraIncomes)}
+function testExpense(t){return (t.expenses||[]).filter(x=>x.active!==false).reduce((s,x)=>s+Number(x.amount||0),0)+sum(t.extraExpenses)}
+function testView(){
+ const t=activeTest();
+ if(!t)return '<div class="notice test-note">Οι υπολογισμοί Τεστ είναι sandbox. Δεν αλλάζουν κανέναν πραγματικό μήνα και δεν πειράζουν την πραγματική αποταμίευση.</div><section class="section"><div class="empty"><h2>Δεν υπάρχει τεστ ακόμα</h2><p>Δημιούργησε ένα από τα ποσά του ενεργού μήνα και παίξε ελεύθερα με σενάρια.</p><button class="btn warn" id="newTest">+ Νέο τεστ</button></div></section>';
+ const inc=testIncome(t),exp=testExpense(t),before=inc-exp,after=before-Number(t.plannedSavings||0);
+ const chips=state.tests.slice().reverse().map(x=>'<button class="test-chip '+(x.id===t.id?'active':'')+'" data-open-test="'+x.id+'">'+esc(x.title)+'</button>').join('');
+ return '<div class="notice test-note">ΤΕΣΤ: ό,τι αλλάζεις εδώ είναι μόνο για εικόνα. Δεν επηρεάζει πραγματικά ποσά, μήνες ή την «Άκρη».</div>'+
+ '<section class="workspace"><div class="test-list">'+chips+'</div><div class="workspace-row"><div><div class="mini">Σενάριο</div><h2 class="month-title">'+esc(t.title)+'</h2><div class="mini">Βάση: '+esc(monthLabel(t.sourceMonth||state.activeMonth))+'</div></div><div class="workspace-group"><button class="btn warn" id="newTest">+ Νέο τεστ</button><button class="btn danger" id="removeTest">Αφαίρεση τεστ</button><div class="field"><label>Ημερομηνία</label><input id="testDate" type="date" value="'+esc(t.date||'')+'"></div></div></div></section>'+
+ '<section class="summary"><div class="kpi test"><small>Έσοδα τεστ</small><strong>'+euro(inc)+'</strong></div><div class="kpi test"><small>Έξοδα τεστ</small><strong>'+euro(exp)+'</strong></div><div class="kpi test"><small>Πριν την υποθετική άκρη</small><strong>'+euro(before)+'</strong></div><div class="kpi test"><small>Τελικό υπόλοιπο</small><strong class="'+(after<0?'negative':'')+'">'+euro(after)+'</strong></div></section>'+
+ '<section class="section"><div class="section-head"><div><h2>Έσοδα Τεστ</h2><p>Μόνο υποθετικά.</p></div><button class="btn warn" data-add="t-income">+ Άλλο</button></div><div class="list">'+t.incomes.map(x=>incomeRow(x,'income',true,true)).join('')+t.extraIncomes.map(x=>incomeRow(x,'extraIncome',true,false)).join('')+'</div></section>'+
+ '<section class="section"><div class="section-head"><div><h2>Πάγια & έξοδα Τεστ</h2><p>Μπορείς να κλείσεις πάγια ή να αλλάξεις ποσά χωρίς καμία πραγματική επίδραση.</p></div><button class="btn warn" data-add="t-expense">+ Άλλο</button></div><div class="list">'+t.expenses.map(x=>recurringRow(x,'expense',true)).join('')+t.extraExpenses.map(x=>simpleRow(x,'extraExpense',true)).join('')+'</div></section>'+
+ '<section class="section"><div class="section-head"><div><h2>Υποθετική αποταμίευση</h2><p>Δεν μπαίνει πραγματικά στην «Άκρη».</p></div></div><div class="save-card"><small>Αν έβαζες στην άκρη</small><div class="save-form"><input id="plannedSavings" type="number" min="0" step="0.01" value="'+Number(t.plannedSavings||0)+'"><span class="btn warn" style="pointer-events:none">ΤΕΣΤ</span></div><div class="total-line"><span>Θα σου έμεναν</span><strong>'+euro(after)+'</strong></div></div></section>';
+}
+
+function bind(){
+ document.getElementById('tabReal').onclick=()=>{view='real';render()};
+ document.getElementById('tabTest').onclick=()=>{view='test';render()};
+ const m=curMonth();
+ const ms=document.getElementById('monthSelect');if(ms)ms.onchange=e=>{state.activeMonth=e.target.value;save();render()};
+ const cd=document.getElementById('calcDate');if(cd)cd.onchange=e=>{m.calculationDate=e.target.value||m.key+'-01';save()};
+ const nm=document.getElementById('newMonth');if(nm)nm.onclick=openNewMonth;
+ document.querySelectorAll('[data-money]').forEach(inp=>inp.oninput=()=>changeMoney(inp));
+ document.querySelectorAll('[data-toggle]').forEach(inp=>inp.onchange=()=>toggleRecurring(inp));
+ document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeExtra(b));
+ document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addExtra(b.dataset.add));
+ document.querySelectorAll('[data-remove-saving]').forEach(b=>b.onclick=()=>removeSaving(b.dataset.removeSaving));
+ const sm=document.getElementById('saveMoney');if(sm)sm.onclick=putSavings;
+ const tm=document.getElementById('takeMoney');if(tm)tm.onclick=takeSavings;
+ const nt=document.getElementById('newTest');if(nt)nt.onclick=createTest;
+ const rt=document.getElementById('removeTest');if(rt)rt.onclick=removeTest;
+ document.querySelectorAll('[data-open-test]').forEach(b=>b.onclick=()=>{state.activeTestId=b.dataset.openTest;save();render()});
+ const td=document.getElementById('testDate');if(td)td.onchange=e=>{const t=activeTest();if(t){t.date=e.target.value||isoToday();save()}};
+ const ps=document.getElementById('plannedSavings');if(ps)ps.oninput=e=>{const t=activeTest();if(t){t.plannedSavings=Math.max(0,Number(e.target.value||0));save();render()}};
+}
+function targetFromPrefix(prefix){
+ const test=prefix[0]==='t',kind=prefix.slice(2);
+ const o=test?activeTest():curMonth();
+ if(!o)return null;
+ return {o,kind};
+}
+function arrFor(o,kind){return kind==='income'?o.incomes:kind==='expense'?o.expenses:kind==='extraIncome'?o.extraIncomes:o.extraExpenses}
+function changeMoney(inp){
+ const p=targetFromPrefix(inp.dataset.money);if(!p)return;
+ const a=arrFor(p.o,p.kind),x=a.find(v=>v.id===inp.dataset.id);if(x)x.amount=Math.max(0,Number(inp.value||0));
+ save();render();
+}
+function toggleRecurring(inp){
+ const p=targetFromPrefix(inp.dataset.toggle);if(!p)return;
+ const x=arrFor(p.o,p.kind).find(v=>v.id===inp.dataset.id);if(x)x.active=inp.checked;
+ save();render();
+}
+function removeExtra(b){
+ const p=targetFromPrefix(b.dataset.remove);if(!p)return;
+ const a=arrFor(p.o,p.kind),i=a.findIndex(x=>x.id===b.dataset.id);if(i>=0)a.splice(i,1);
+ save();render();
+}
+function showModal(title,body,onSave,label){
+ const d=document.getElementById('modal');
+ d.innerHTML='<form class="modal-inner" id="modalForm"><div class="modal-head"><h2>'+esc(title)+'</h2><button class="close" type="button" id="modalClose">×</button></div><div class="modal-body">'+body+'</div><div class="modal-footer"><button class="btn ghost" type="button" id="modalCancel">Άκυρο</button><button class="btn primary" type="submit">'+esc(label||'Αποθήκευση')+'</button></div></form>';
+ d.showModal();const close=()=>d.close();document.getElementById('modalClose').onclick=close;document.getElementById('modalCancel').onclick=close;
+ document.getElementById('modalForm').onsubmit=e=>{e.preventDefault();const ok=onSave(new FormData(e.currentTarget));if(ok===false)return;d.close();save();render()};
+}
+function addExtra(code){
+ const test=code[0]==='t',kind=code.slice(2),o=test?activeTest():curMonth();if(!o)return;
+ const isIncome=kind==='income';
+ showModal(isIncome?'Άλλο έσοδο':'Άλλο έξοδο','<div class="form-grid"><div class="field"><label>Περιγραφή</label><input name="name" required placeholder="π.χ. Δώρο, service"></div><div class="field"><label>Ποσό</label><input name="amount" type="number" min="0" step="0.01" required></div></div>',fd=>{const x={id:uid(),name:String(fd.get('name')||'Άλλο').trim(),amount:Number(fd.get('amount')||0)};(isIncome?o.extraIncomes:o.extraExpenses).push(x)},'Προσθήκη');
+}
+function openNewMonth(){
+ showModal('Νέος μήνας','<div class="field"><label>Μήνας</label><input name="month" type="month" required value="'+monthNow()+'"></div><div class="notice" style="margin-top:10px">Θα φορτωθούν ξανά όλα τα πάγια. Ό,τι απενεργοποιήσεις θα αφορά μόνο αυτόν τον μήνα.</div>',fd=>{const k=String(fd.get('month')||'');if(!k)return false;if(!state.months[k])state.months[k]=baseMonth(k);state.activeMonth=k},'Άνοιγμα μήνα');
+}
+function putSavings(){
+ const inp=document.getElementById('saveAmount'),a=Math.max(0,Number(inp.value||0)),m=curMonth();if(!a)return;
+ if(a>realRemain(m)){alert('Το ποσό είναι μεγαλύτερο από όσα μένουν αυτόν τον μήνα.');return}
+ state.savings+=a;state.savingsTx.push({id:uid(),date:isoToday(),monthKey:m.key,label:'Στην άκρη',amount:a});save();render();
+}
+function takeSavings(){
+ const inp=document.getElementById('takeAmount'),a=Math.max(0,Number(inp.value||0)),m=curMonth();if(!a)return;
+ if(a>state.savings){alert('Δεν υπάρχουν τόσα χρήματα στην άκρη.');return}
+ state.savings-=a;state.savingsTx.push({id:uid(),date:isoToday(),monthKey:m.key,label:'Από την άκρη',amount:-a});save();render();
+}
+function removeSaving(id){
+ const i=state.savingsTx.findIndex(x=>x.id===id);if(i<0)return;
+ const tx=state.savingsTx[i],next=Number(state.savings||0)-Number(tx.amount||0);
+ if(next<0){alert('Δεν γίνεται να αφαιρεθεί αυτή η καταχώριση γιατί θα έκανε την αποταμίευση αρνητική.');return}
+ state.savings=next;state.savingsTx.splice(i,1);save();render();
+}
+function createTest(){
+ const t=cloneForTest(curMonth());state.tests.push(t);state.activeTestId=t.id;save();view='test';render();
+}
+function removeTest(){
+ const t=activeTest();if(!t)return;if(!confirm('Να αφαιρεθεί αυτό το τεστ;'))return;
+ state.tests=state.tests.filter(x=>x.id!==t.id);state.activeTestId=state.tests.length?state.tests[state.tests.length-1].id:null;save();render();
+}
+render();
+</script>
+<script src="./sync.js?v=8"></script>
+<script>if(window.initMaziSync)window.initMaziSync();</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
+</body>
+</html>
