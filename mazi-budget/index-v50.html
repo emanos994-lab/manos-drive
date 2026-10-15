@@ -139,7 +139,7 @@ function realView(){
 }
 
 function cloneForTest(source){
- return {id:uid(),title:'Τεστ '+new Date().toLocaleDateString('el-GR'),date:isoToday(),sourceMonth:source.key,incomes:structuredClone(source.incomes),expenses:structuredClone(source.expenses),extraIncomes:structuredClone(source.extraIncomes),extraExpenses:structuredClone(source.extraExpenses),plannedSavings:0};
+ return {id:uid(),title:'Τεστ '+new Date().toLocaleString('el-GR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),date:isoToday(),sourceMonth:source.key,incomes:structuredClone(source.incomes),expenses:structuredClone(source.expenses),extraIncomes:structuredClone(source.extraIncomes),extraExpenses:structuredClone(source.extraExpenses),plannedSavings:0};
 }
 function activeTest(){return state.tests.find(x=>x.id===state.activeTestId)||null}
 function testIncome(t){return sum(t.incomes)+sum(t.extraIncomes)}
@@ -164,7 +164,7 @@ function bind(){
  const ms=document.getElementById('monthSelect');if(ms)ms.onchange=e=>{state.activeMonth=e.target.value;save();render()};
  const cd=document.getElementById('calcDate');if(cd)cd.onchange=e=>{m.calculationDate=e.target.value||m.key+'-01';save()};
  const nm=document.getElementById('newMonth');if(nm)nm.onclick=openNewMonth;
- document.querySelectorAll('[data-money]').forEach(inp=>inp.oninput=()=>changeMoney(inp));
+ document.querySelectorAll('[data-money]').forEach(inp=>inp.onchange=()=>changeMoney(inp));
  document.querySelectorAll('[data-toggle]').forEach(inp=>inp.onchange=()=>toggleRecurring(inp));
  document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeExtra(b));
  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addExtra(b.dataset.add));
@@ -175,7 +175,7 @@ function bind(){
  const rt=document.getElementById('removeTest');if(rt)rt.onclick=removeTest;
  document.querySelectorAll('[data-open-test]').forEach(b=>b.onclick=()=>{state.activeTestId=b.dataset.openTest;save();render()});
  const td=document.getElementById('testDate');if(td)td.onchange=e=>{const t=activeTest();if(t){t.date=e.target.value||isoToday();save()}};
- const ps=document.getElementById('plannedSavings');if(ps)ps.oninput=e=>{const t=activeTest();if(t){t.plannedSavings=Math.max(0,Number(e.target.value||0));save();render()}};
+ const ps=document.getElementById('plannedSavings');if(ps)ps.onchange=e=>{const t=activeTest();if(t){t.plannedSavings=Math.max(0,Number(e.target.value||0));save();render()}};
 }
 function targetFromPrefix(prefix){
  const test=prefix[0]==='t',kind=prefix.slice(2);
