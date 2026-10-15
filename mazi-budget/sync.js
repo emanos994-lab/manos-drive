@@ -15,7 +15,7 @@ const version=()=>Number(get(K.version)||0);
 const setStatus=(st,txt)=>{const b=document.getElementById('syncStatusButton'),t=document.getElementById('syncStatusText');if(b)b.dataset.state=st||'';if(t)t.textContent=txt||'Sync';};
 const refresh=()=>{if(!secret())return setStatus('','Σύνδεση');if(!navigator.onLine)return setStatus('offline','Offline');if(dirty())return setStatus('pending','Αναμονή');if(bound())return setStatus('synced','✓ Sync');setStatus('working','Σύνδεση…');};
 const device=()=>{let id=get(K.device);if(!id){id=crypto.randomUUID?crypto.randomUUID():'d'+Date.now()+Math.random().toString(36).slice(2);set(K.device,id)}return id};
-const meaningful=()=>state?.schema===5?Boolean(Object.keys(state.months||{}).length||Number(state.savings||0)||(state.tests||[]).length):Boolean(state.setupComplete||Number(state.savings||0)||(state.wallets||[]).some(w=>Number(w.balance||0))||(state.incomes||[]).length||(state.expenses||[]).length);
+const meaningful=()=>Number(state?.schema||0)>=5?Boolean(Object.keys(state.months||{}).length||(state.savingsTx||[]).length||(state.tests||[]).length):Boolean(state.setupComplete||Number(state.savings||0)||(state.wallets||[]).some(w=>Number(w.balance||0))||(state.incomes||[]).length||(state.expenses||[]).length);
 
 const b64=u=>{let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode(...u.subarray(i,i+32768));return btoa(s)};
 const unb64=s=>{const x=atob(s),u=new Uint8Array(x.length);for(let i=0;i<x.length;i++)u[i]=x.charCodeAt(i);return u};
