@@ -1,8 +1,14 @@
-.seasonal-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.seasonal-row{display:grid;grid-template-columns:28px minmax(0,1fr) 130px 125px 34px;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:13px;background:#fbfcfe}
-.seasonal-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--green)}
-.seasonal-row input[type=number],.seasonal-row select{width:100%;border:1px solid #d9e1eb;background:#fff;border-radius:10px;padding:8px;font:inherit}
-.seasonal-events{display:grid;gap:7px;margin-top:10px}
-.seasonal-event{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#f7faf8;border:1px solid #dcece3;font-size:12px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-@media(max-width:540px){.seasonal-row{grid-template-columns:24px minmax(0,1fr) 94px 96px 32px}.seasonal-row label{font-size:12px}}
+.bonus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bonus-card{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fbfcfe}
+.bonus-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+.bonus-card-head strong{display:block;font-size:14px}.bonus-card-head small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.bonus-card-head select{border:1px solid #d9e1eb;background:#fff;border-radius:10px;padding:7px 8px;font:inherit;max-width:120px}
+.bonus-person-row{display:grid;grid-template-columns:minmax(0,1fr) 92px 14px;gap:6px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.bonus-check{display:flex;align-items:center;gap:7px;font-weight:800;font-size:13px}.bonus-check input{width:17px;height:17px;accent-color:var(--green)}.bonus-person-row input[type=number]{width:100%;border:1px solid #d9e1eb;background:#fff;border-radius:10px;padding:8px;font:inherit;text-align:right}.bonus-euro{color:var(--muted);font-weight:800}
+.custom-bonus-list{display:grid;gap:8px;margin-top:10px}.custom-bonus-row{display:grid;grid-template-columns:24px minmax(0,1fr) 120px 110px 34px;gap:7px;align-items:center;padding:8px 9px;border:1px solid var(--line);border-radius:13px;background:#fbfcfe}.custom-bonus-row input,.custom-bonus-row select{width:100%;border:1px solid #d9e1eb;background:#fff;border-radius:9px;padding:8px;font:inherit}.custom-bonus-row input[type=checkbox]{width:17px;height:17px}
+.seasonal-events{display:grid;gap:7px;margin-top:10px}.seasonal-event{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#f7faf8;border:1px solid #dcece3;font-size:12px}
+.simple-plan-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.simple-plan-summary>div{padding:11px;border:1px solid var(--line);border-radius:14px;background:#fbfcfe}.simple-plan-summary small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.simple-plan-summary strong{font-size:18px}.simple-plan-summary .final{background:#eef8f3;border-color:#d4eadf}
+.goal-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.goal-step{display:flex;gap:8px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:15px;background:#fbfcfe}.goal-step>span{display:grid;place-items:center;flex:none;width:25px;height:25px;border-radius:50%;background:var(--purple2);color:var(--purple);font-weight:900}.goal-step small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.goal-step strong{font-size:17px}
+.verdict{padding:16px;border-radius:17px;border:1px solid var(--line)}.verdict.ok{background:#f0faf5;border-color:#d1ebdd}.verdict.need{background:#fff7f1;border-color:#f0ddc7}.verdict small{color:var(--muted)}.verdict h2{margin:4px 0 6px}.verdict-number{font-size:30px;font-weight:900}.verdict p{margin:2px 0 0;color:var(--muted);font-size:12px}
+@media(max-width:760px){.bonus-grid,.simple-plan-summary,.goal-flow{grid-template-columns:1fr 1fr}}
+@media(max-width:540px){.bonus-grid,.simple-plan-summary,.goal-flow{grid-template-columns:1fr}.bonus-card-head select{max-width:112px}.custom-bonus-row{grid-template-columns:22px minmax(0,1fr) 90px 88px 32px}.custom-bonus-row input,.custom-bonus-row select{font-size:12px;padding:7px}}
