@@ -11,7 +11,8 @@
 <link rel="stylesheet" href="./seasonal.css?v=2">
 <link rel="stylesheet" href="./giftcalc.css?v=1">
 <link rel="stylesheet" href="./paycalc.css?v=1">
-<title>Μαζί — Οικονομικά v6.4</title>
+<link rel="stylesheet" href="./cycle.css?v=1">
+<title>Μαζί — Οικονομικά v6.5</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--text:#203247;--muted:#78899d;--line:#e2e9f1;--blue:#8bbcf2;--blue2:#dcecff;--green:#3aaa78;--red:#d35d69;--orange:#d99a43;--orange2:#fff3df;--purple:#795db8;--purple2:#f1ebff;--shadow:0 14px 40px rgba(45,62,86,.08)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding-bottom:40px}
@@ -118,7 +119,7 @@ function realView(){
  (hist.length?'<div class="history">'+hist.map(x=>'<div class="history-row"><span><strong>'+esc(x.label)+'</strong> · '+esc(fmtDate(x.date))+(x.reason?' · '+esc(x.reason):'')+'</span><div class="history-actions"><strong class="'+(Number(x.amount)>=0?'positive':'negative')+'">'+(Number(x.amount)>=0?'+':'')+euro(x.amount)+'</strong><button class="remove" style="width:29px;height:29px" data-remove-saving="'+x.id+'">×</button></div></div>').join('')+'</div>':'')+'</section>';
 }
 
-function longPlanDefaults(){const m=curMonth();return {months:10,income:monthIncome(m),expenses:monthExpense(m)}}
+function longPlanDefaults(){const m=curMonth();return {months:10,income:monthIncome(m),expenses:monthExpense(m),buffer:100}}
 function ensureLongPlan(){if(!state.longPlan)state.longPlan=longPlanDefaults();return state.longPlan}
 function projectionRows(start,monthly,n){let s='';for(let i=1;i<=n;i++)s+='<div class="projection-row"><span>Μήνας '+i+'</span><strong>'+euro(start+monthly*i)+'</strong></div>';return s}
 function testView(){
@@ -135,7 +136,7 @@ function testView(){
  '<section class="section"><div class="section-head"><div><h2>Μακροπρόθεσμο πλάνο</h2><p>Υπολογίζει πόσα θα μπορούσες να έχεις στην άκρη αν κάθε μήνας κινηθεί περίπου με αυτά τα ποσά.</p></div><button class="btn warn small" id="planFromMonth">Πάρε ποσά από ενεργό μήνα</button></div><div class="plan-grid"><div class="field"><label>Μήνες</label><input id="planMonths" type="number" min="1" max="60" value="'+Number(p.months||10)+'"></div><div class="field"><label>Μηνιαία έσοδα</label><input id="planIncome" type="number" min="0" step="0.01" value="'+Number(p.income||0)+'"></div><div class="field"><label>Λογικά μηνιαία έξοδα</label><input id="planExpenses" type="number" min="0" step="0.01" value="'+Number(p.expenses||0)+'"></div><div class="field"><label>Αφετηρία στην άκρη</label><input value="'+euro(start)+'" disabled></div></div><div class="plan-result"><div class="mini">Δυνατότητα αποταμίευσης ανά μήνα</div><strong class="'+(surplus>=0?'positive':'negative')+'">'+euro(surplus)+'</strong><div class="total-line"><span>Εκτίμηση μετά από '+Number(p.months||10)+' μήνες</span><strong>'+euro(end)+'</strong></div><div class="projection">'+projectionRows(start,surplus,Math.min(24,Math.max(1,Number(p.months||1))))+'</div></div></section>';
 }
 
-function ensureAdvice(){if(!state.advice){const m=curMonth(),start=balanceThroughMonth(state.activeMonth);state.advice={target:start+2000,months:10,income:monthIncome(m),expenses:monthExpense(m)}}return state.advice}
+function ensureAdvice(){if(!state.advice){const m=curMonth(),start=balanceThroughMonth(state.activeMonth);state.advice={target:start+2000,months:10,income:monthIncome(m),expenses:monthExpense(m),buffer:100}}if(state.advice.buffer==null)state.advice.buffer=100;return state.advice}
 function adviceView(){
  const a=ensureAdvice(),start=balanceThroughMonth(state.activeMonth),months=Math.max(1,Number(a.months||1)),income=Number(a.income||0),expenses=Number(a.expenses||0),target=Number(a.target||0),need=Math.max(0,target-start),req=need/months,maxExp=income-req,currentSurplus=income-expenses,projected=start+currentSurplus*months,cut=Math.max(0,expenses-maxExp);
  let msg='';
@@ -159,10 +160,10 @@ function bind(){
  const sm=document.getElementById('saveMoney');if(sm)sm.onclick=putSavings;const tm=document.getElementById('takeMoney');if(tm)tm.onclick=takeSavings;
  const nt=document.getElementById('newTest');if(nt)nt.onclick=createTest;const rt=document.getElementById('removeTest');if(rt)rt.onclick=removeTest;document.querySelectorAll('[data-open-test]').forEach(b=>b.onclick=()=>{state.activeTestId=b.dataset.openTest;save();render()});
  const td=document.getElementById('testDate');if(td)td.onchange=e=>{const t=activeTest();if(t){t.date=e.target.value||isoToday();save()}};const ps=document.getElementById('plannedSavings');if(ps)ps.onchange=e=>{const t=activeTest();if(t){t.plannedSavings=Math.max(0,Number(e.target.value||0));save();render()}};
- for(const [id,key] of [['planMonths','months'],['planIncome','income'],['planExpenses','expenses']]){const el=document.getElementById(id);if(el)el.onchange=e=>{const p=ensureLongPlan();p[key]=Math.max(key==='months'?1:0,Number(e.target.value||0));save();render()}}
+ for(const [id,key] of [['planMonths','months'],['planIncome','income'],['planExpenses','expenses'],['planBuffer','buffer']]){const el=document.getElementById(id);if(el)el.onchange=e=>{const p=ensureLongPlan();p[key]=Math.max(key==='months'?1:0,Number(e.target.value||0));save();render()}}
  const pf=document.getElementById('planFromMonth');if(pf)pf.onclick=()=>{state.longPlan=longPlanDefaults();save();render()};
- for(const [id,key] of [['goalTarget','target'],['goalMonths','months'],['goalIncome','income'],['goalExpenses','expenses']]){const el=document.getElementById(id);if(el)el.onchange=e=>{const a=ensureAdvice();a[key]=Math.max(key==='months'?1:0,Number(e.target.value||0));save();render()}}
- const af=document.getElementById('adviceFromMonth');if(af)af.onclick=()=>{const mm=curMonth(),start=balanceThroughMonth(state.activeMonth);state.advice={target:ensureAdvice().target||start+2000,months:ensureAdvice().months||10,income:monthIncome(mm),expenses:monthExpense(mm)};save();render()};
+ for(const [id,key] of [['goalTarget','target'],['goalMonths','months'],['goalIncome','income'],['goalExpenses','expenses'],['goalBuffer','buffer']]){const el=document.getElementById(id);if(el)el.onchange=e=>{const a=ensureAdvice();a[key]=Math.max(key==='months'?1:0,Number(e.target.value||0));save();render()}}
+ const af=document.getElementById('adviceFromMonth');if(af)af.onclick=()=>{const mm=curMonth(),start=balanceThroughMonth(state.activeMonth),old=ensureAdvice();state.advice={target:old.target||start+2000,months:old.months||10,income:monthIncome(mm),expenses:monthExpense(mm),buffer:old.buffer==null?100:old.buffer};save();render()};
 }
 function target(prefix){const test=prefix[0]==='t',kind=prefix.slice(2),o=test?activeTest():curMonth();return o?{o,kind}:null}
 function arr(o,k){return k==='income'?o.incomes:k==='expense'?o.expenses:k==='extraIncome'?o.extraIncomes:o.extraExpenses}
@@ -184,6 +185,7 @@ render();
 <script src="./seasonal.js?v=2"></script>
 <script src="./giftcalc.js?v=1"></script>
 <script src="./paycalc.js?v=1"></script>
+<script src="./cycle.js?v=1"></script>
 <script src="./sync.js?v=9"></script><script>if(window.initMaziSync)window.initMaziSync();</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body></html>
