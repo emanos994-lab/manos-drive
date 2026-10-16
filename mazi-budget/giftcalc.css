@@ -1,0 +1,9 @@
+.gift-note{margin-bottom:12px}
+.gift-main-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gift-results{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:13px}
+.gift-result-card{display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;box-shadow:var(--shadow)}
+.gift-result-card .gift-icon{font-size:27px}.gift-result-card small{display:block;color:var(--muted);font-weight:800;margin-bottom:5px}.gift-result-card strong{display:block;font-size:24px}.gift-result-card p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.gift-period-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.gift-period-grid.one{grid-template-columns:minmax(180px,260px)}
+.gift-formula{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f7f9fc;border:1px solid var(--line);font-size:12px;color:#60758b}
+@media(max-width:760px){.gift-main-grid{grid-template-columns:1fr 1fr}.gift-results{grid-template-columns:1fr}.gift-period-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:540px){.tabs{grid-template-columns:1fr 1fr}.gift-main-grid,.gift-period-grid{grid-template-columns:1fr}.gift-period-grid.one{grid-template-columns:1fr}}
