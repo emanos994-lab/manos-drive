@@ -53,7 +53,7 @@ const expenseBase=[['e1','Δάνειο Πένυ',157],['e2','Δάνειο αυτ
 function baseMonth(key,source){
  const inc=source?.incomes?.map(x=>({id:x.id,name:x.name,amount:Number(x.amount||0)}))||incomeBase.map(x=>({id:x[0],name:x[1],amount:x[2]}));
  const exp=source?.expenses?.map(x=>({id:x.id,name:x.name,amount:Number(x.amount||0),active:true}))||expenseBase.map(x=>({id:x[0],name:x[1],amount:x[2],active:true}));
- return {key,calculationDate:key+'-01',incomes:inc,expenses:exp,extraIncomes:[],extraExpenses:[]};
+ return {key,calculationDate:key+'-25',incomes:inc,expenses:exp,extraIncomes:[],extraExpenses:[]};
 }
 const defaults={schema:6,activeMonth:monthNow(),months:{},savingsTx:[],tests:[],activeTestId:null,longPlan:null,advice:null};
 defaults.months[defaults.activeMonth]=baseMonth(defaults.activeMonth);
@@ -111,7 +111,7 @@ function extraExpenseRow(x,test){const p=test?'t':'r';return '<div class="money-
 function realView(){
  const m=curMonth(),inc=monthIncome(m),exp=monthExpense(m),prior=balanceBeforeMonth(m.key),net=monthSavingsNet(m.key),bal=balanceThroughMonth(m.key),rem=monthRemain(m);
  const hist=(state.savingsTx||[]).filter(x=>x.monthKey===m.key).slice().reverse();
- return '<section class="workspace"><div class="workspace-row"><div><div class="mini">Ενεργός μήνας</div><h2 class="month-title">'+esc(monthLabel(m.key))+'</h2></div><div class="workspace-group"><div class="field"><label>Μήνας</label><select id="monthSelect">'+monthOptions()+'</select></div><button class="btn soft" id="newMonth">+ Νέος μήνας</button><button class="btn danger" id="deleteMonth">Διαγραφή μήνα</button><div class="field"><label>Ημερομηνία υπολογισμού</label><input id="calcDate" type="date" value="'+esc(m.calculationDate||'')+'"></div></div></div></section>'+
+ return '<section class="workspace"><div class="workspace-row"><div><div class="mini">Ενεργός μήνας</div><h2 class="month-title">'+esc(monthLabel(m.key))+'</h2></div><div class="workspace-group"><div class="field"><label>Μήνας</label><select id="monthSelect">'+monthOptions()+'</select></div><button class="btn soft" id="newMonth">+ Νέος μήνας</button><button class="btn danger" id="deleteMonth">Διαγραφή μήνα</button><div class="field"><label>Έναρξη κύκλου</label><input id="calcDate" type="date" value="'+esc(m.calculationDate||'')+'"></div></div></div></section>'+
  '<section class="summary"><div class="kpi"><small>Έσοδα</small><strong>'+euro(inc)+'</strong></div><div class="kpi"><small>Έξοδα</small><strong>'+euro(exp)+'</strong></div><div class="kpi remain"><small>Μένουν μετά την άκρη</small><strong class="'+(rem<0?'negative':'')+'">'+euro(rem)+'</strong></div><div class="kpi savings"><small>Στην άκρη έως '+esc(monthLabel(m.key))+'</small><strong>'+euro(bal)+'</strong></div></section>'+
  '<section class="section"><div class="section-head"><div><h2>Έσοδα</h2><p>Κάθε μήνας έχει τα δικά του ποσά.</p></div><button class="btn soft" data-add="r-income">+ Άλλο</button></div><div class="list">'+m.incomes.map(x=>incomeRow(x,'income',false,true)).join('')+m.extraIncomes.map(x=>incomeRow(x,'extraIncome',false,false)).join('')+'</div><div class="total-line"><span>Σύνολο εσόδων</span><strong>'+euro(inc)+'</strong></div></section>'+
  '<section class="section"><div class="section-head"><div><h2>Πάγια & έξοδα</h2><p>Τα πάγια δεν διαγράφονται. Ξετικάρεις όποιο δεν ισχύει μόνο αυτόν τον μήνα.</p></div><button class="btn soft" data-add="r-expense">+ Άλλο</button></div><div class="list">'+m.expenses.map(x=>recurringRow(x,false)).join('')+m.extraExpenses.map(x=>extraExpenseRow(x,false)).join('')+'</div><div class="total-line"><span>Σύνολο εξόδων</span><strong>'+euro(exp)+'</strong></div></section>'+
@@ -153,7 +153,7 @@ function adviceView(){
 function bind(){
  document.getElementById('tabReal').onclick=()=>{view='real';render()};document.getElementById('tabTest').onclick=()=>{view='test';render()};document.getElementById('tabAdvice').onclick=()=>{view='advice';render()};
  const m=curMonth(),ms=document.getElementById('monthSelect');if(ms)ms.onchange=e=>{state.activeMonth=e.target.value;save();render()};
- const cd=document.getElementById('calcDate');if(cd)cd.onchange=e=>{m.calculationDate=e.target.value||m.key+'-01';save()};
+ const cd=document.getElementById('calcDate');if(cd)cd.onchange=e=>{m.calculationDate=e.target.value||m.key+'-25';save()};
  const nm=document.getElementById('newMonth');if(nm)nm.onclick=openNewMonth;const dm=document.getElementById('deleteMonth');if(dm)dm.onclick=deleteMonth;
  document.querySelectorAll('[data-money]').forEach(x=>x.onchange=()=>changeMoney(x));document.querySelectorAll('[data-toggle]').forEach(x=>x.onchange=()=>toggleRecurring(x));document.querySelectorAll('[data-remove]').forEach(x=>x.onclick=()=>removeExtra(x));document.querySelectorAll('[data-add]').forEach(x=>x.onclick=()=>addExtra(x.dataset.add));
  document.querySelectorAll('[data-remove-saving]').forEach(x=>x.onclick=()=>removeSaving(x.dataset.removeSaving));
