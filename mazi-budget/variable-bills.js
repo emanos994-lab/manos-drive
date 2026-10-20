@@ -1,5 +1,33 @@
 (()=>{
 function today(){return isoToday()}
+function moneyIcon(x,kind){
+  const byId={
+    i1:'💼',i2:'💻',i3:'🍽️',i4:'🏠',i5:'💵',i6:'💼',
+    e1:'🏦',e2:'🚗',e3:'🛋️',e4:'💳',e5:'📱',e6:'💅',e7:'🛡️',
+    e8:'🥬',e9:'🥩',e10:'⛽',e11:'🩺',e12:'🩺',e13:'☕',e14:'🚬',
+    e15:'🚬',e16:'🛒',e17:'👤',e18:'👤',e19:'⚡',e20:'💧',e21:'🏢'
+  };
+  if(byId[x?.id])return byId[x.id];
+  const n=String(x?.name||'').toLowerCase();
+  if(n.includes('καφ'))return '☕';
+  if(n.includes('βενζ'))return '⛽';
+  if(n.includes('σουπερ')||n.includes('super'))return '🛒';
+  if(n.includes('ρεύ')||n.includes('δεη'))return '⚡';
+  if(n.includes('νερ')||n.includes('ευδαπ'))return '💧';
+  if(n.includes('τσιγ'))return '🚬';
+  if(n.includes('γιατρ'))return '🩺';
+  if(n.includes('αυτοκιν'))return '🚗';
+  if(n.includes('πιστω'))return '💳';
+  if(n.includes('δάνει'))return '🏦';
+  if(n.includes('cosmote')||n.includes('τηλεφ'))return '📱';
+  if(n.includes('κρέα'))return '🥩';
+  if(n.includes('λαϊκ'))return '🥬';
+  if(n.includes('κοινόχ'))return '🏢';
+  if(n.includes('ενοίκ'))return '🏠';
+  if(n.includes('μισθ'))return '💼';
+  return String(kind||'').toLowerCase().includes('income')?'💰':'🧾';
+}
+function iconTitle(x,kind){return moneyIcon(x,kind)+' '+esc(x.name)}
 function stampRecord(x,amount){
   if(!x)return;
   const d=today();
@@ -104,6 +132,7 @@ recurringRow=function(x,test){
   const meta=recordText(x);
   if(x.variable!==true){
     let html=baseRecurringRow(x,test);
+    html=html.replace('<label>'+esc(x.name)+'</label>','<label>'+iconTitle(x,'expense')+'</label>');
     if(meta&&html.includes('flow-expense-label'))html=html.replace('</div><input type="number"','<small class="record-date">'+esc(meta)+'</small></div><input type="number"');
     return html;
   }
@@ -115,7 +144,7 @@ recurringRow=function(x,test){
   const due=x.dueDate?(' · λήξη '+fmtDate(x.dueDate)):'';
   return '<div class="money-row recurring flow-recurring variable-bill '+(x.active===false?'off':'')+'">'+
     '<input type="checkbox" '+(x.active===false?'':'checked')+' data-toggle="r-expense" data-id="'+x.id+'">'+
-    '<div class="flow-expense-label"><div class="variable-title"><label>'+esc(x.name)+'</label><span class="variable-badge">Μεταβλητό</span></div><small class="'+(over>0?'negative':'')+'">'+detail+due+'</small>'+(meta?'<small class="record-date">'+esc(meta)+'</small>':'')+'</div>'+
+    '<div class="flow-expense-label"><div class="variable-title"><label>'+iconTitle(x,'expense')+'</label><span class="variable-badge">Μεταβλητό</span></div><small class="'+(over>0?'negative':'')+'">'+detail+due+'</small>'+(meta?'<small class="record-date">'+esc(meta)+'</small>':'')+'</div>'+
     '<input type="number" min="0" step="0.01" value="'+planned+'" data-money="r-expense" data-id="'+x.id+'" aria-label="Ποσό '+esc(x.name)+' αυτού του κύκλου">'+
     '<button class="btn small soft flow-move-btn" data-expense-move="'+x.id+'">Κίνηση</button></div>';
 };
@@ -125,6 +154,7 @@ extraExpenseRow=function(x,test){
   let html=baseExtraRow(x,test);
   if(test)return html;
   const meta=recordText(x);
+  html=html.replace('<strong>'+esc(x.name)+'</strong>','<strong>'+iconTitle(x,'expense')+'</strong>');
   if(meta)html=html.replace('</div><input type="number"','<small class="record-date">'+esc(meta)+'</small></div><input type="number"');
   return html;
 };
