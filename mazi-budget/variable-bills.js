@@ -123,7 +123,7 @@ incomeRow=function(x,kind,test,fixed){
   if(test)return baseIncomeRow(x,kind,test,fixed);
   const meta=recordText(x);
   const del=fixed?'':'<button class="remove" data-remove="r-'+kind+'" data-id="'+x.id+'">×</button>';
-  return '<div class="money-row '+(fixed?'recurring':'')+' record-money-row" style="'+(fixed?'grid-template-columns:minmax(0,1fr) 120px':'')+'"><div class="record-label"><label>'+esc(x.name)+'</label>'+(meta?'<small class="record-date">'+esc(meta)+'</small>':'')+'</div><input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="r-'+kind+'" data-id="'+x.id+'">'+del+'</div>';
+  return '<div class="money-row '+(fixed?'recurring':'')+' record-money-row" style="'+(fixed?'grid-template-columns:minmax(0,1fr) 120px':'')+'"><div class="record-label"><label>'+iconTitle(x,kind)+'</label>'+(meta?'<small class="record-date">'+esc(meta)+'</small>':'')+'</div><input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="r-'+kind+'" data-id="'+x.id+'">'+del+'</div>';
 };
 
 const baseRecurringRow=recurringRow;
