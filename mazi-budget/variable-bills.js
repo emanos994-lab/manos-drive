@@ -5,6 +5,8 @@ function ensureVariableBills(){
     if(dei){
       dei.variable=true;
       if(dei.actualKnown==null)dei.actualKnown=Number(dei.amount||0)>0;
+      if(!Array.isArray(dei.actualHistory))dei.actualHistory=[];
+      if(dei.actualEnteredAt==null)dei.actualEnteredAt='';
     }
   }
 }
@@ -16,8 +18,15 @@ changeMoney=function(inp){
   if(p&&p.kind==='expense'){
     const x=arr(p.o,p.kind).find(v=>v.id===inp.dataset.id);
     if(x&&x.variable===true){
-      x.amount=Math.max(0,Number(inp.value||0));
+      const next=Math.max(0,Number(inp.value||0));
+      const changed=!x.actualKnown || Math.abs(Number(x.amount||0)-next)>0.005;
+      x.amount=next;
       x.actualKnown=true;
+      if(changed){
+        x.actualEnteredAt=isoToday();
+        if(!Array.isArray(x.actualHistory))x.actualHistory=[];
+        x.actualHistory.push({id:uid(),date:isoToday(),amount:next});
+      }
       save();render();return;
     }
   }
@@ -30,8 +39,9 @@ recurringRow=function(x,test){
   const m=curMonth();
   const spent=(m.expenseMoves||[]).filter(v=>v.expenseId===x.id).reduce((s,v)=>s+Number(v.amount||0),0);
   const planned=Number(x.amount||0),remaining=Math.max(0,planned-spent),over=Math.max(0,spent-planned);
-  const status=x.actualKnown===true?'Ποσό επιβεβαιωμένο':'Προσωρινή εκτίμηση';
-  const detail=spent>0?('Έγιναν '+euro(spent)+' · '+(over>0?'Υπέρβαση '+euro(over):'Μένουν '+euro(remaining))):status;
+  const entered=x.actualEnteredAt?(' · καταχωρήθηκε '+fmtDate(x.actualEnteredAt)):'';
+  const status=x.actualKnown===true?('Ποσό επιβεβαιωμένο'+entered):'Προσωρινή εκτίμηση';
+  const detail=spent>0?('Έγιναν '+euro(spent)+' · '+(over>0?'Υπέρβαση '+euro(over):'Μένουν '+euro(remaining))+entered):status;
   const due=x.dueDate?(' · λήξη '+fmtDate(x.dueDate)):'';
   return '<div class="money-row recurring flow-recurring variable-bill '+(x.active===false?'off':'')+'">'+
     '<input type="checkbox" '+(x.active===false?'':'checked')+' data-toggle="r-expense" data-id="'+x.id+'">'+
