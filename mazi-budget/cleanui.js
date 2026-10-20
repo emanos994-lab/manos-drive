@@ -12,7 +12,7 @@ function remainingBills(m){
 }
 function recordedSpent(m){
   const fixed=(m.expenseMoves||[]).reduce((s,x)=>s+Number(x.amount||0),0);
-  const oneoff=(m.extraExpenses||[]).filter(x=>x.status==='paid').reduce((s,x)=>s+Number(x.amount||0),0);
+  const oneoff=window.maziPaidExtra?window.maziPaidExtra(m):(m.extraExpenses||[]).filter(x=>x.status==='paid').reduce((s,x)=>s+Number(x.amount||0),0);
   return fixed+oneoff;
 }
 function quickDashboard(m){
