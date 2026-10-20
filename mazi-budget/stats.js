@@ -16,7 +16,7 @@ function statMonthData(key){
     deiUpdated:dei?.updatedAt||dei?.actualEnteredAt||''
   };
 }
-function statKeys(){return Object.keys(state.months||{}).sort()}
+function statKeys(){return Object.keys(state.months||{}).filter(k=>k<=state.activeMonth).sort()}
 function deltaText(v){
   const n=Number(v||0);
   if(Math.abs(n)<0.005)return 'ίδιο';
