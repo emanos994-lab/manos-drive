@@ -30,7 +30,7 @@ function flexibleExpense(m,includeExtras=true){
   return recurring+(includeExtras?(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0):0);
 }
 function historicalVolatility(){
-  const keys=Object.keys(state.months||{}).filter(k=>k<state.activeMonth).sort().slice(-6);
+  const keys=Object.keys(state.months||{}).filter(k=>k<liveKey()).sort().slice(-6);
   if(keys.length<3)return .20;
   const vals=keys.map(k=>monthExpense(state.months[k])).filter(v=>v>0);
   if(vals.length<3)return .20;
