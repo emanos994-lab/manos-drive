@@ -30,7 +30,7 @@ function dueItems(m){
 function reminderPanel(m){
  const items=dueItems(m);
  const all=(m.expenses||[]).filter(e=>Number(e.payDay)>0);
- return '<section class="section reminder-section"><div class="section-head"><div><h2>Υπενθυμίσεις πληρωμών</h2><p>Βάλε τη συνηθισμένη ημέρα πληρωμής για κάθε πάγιο.</p></div><button class="btn soft" id="editReminders">Ρυθμίσεις</button></div>'+
+ return '<section class="section reminder-section"><div class="section-head"><div><h2>Υπενθυμίσεις πληρωμών</h2><p>Βάλε τη συνηθισμένη ημέρα πληρωμής για κάθε πάγιο.</p></div><div class="actions"><button class="btn ghost small" id="enableNotifications">Ειδοποιήσεις συσκευής</button><button class="btn soft" id="editReminders">Ρυθμίσεις</button></div></div>'+
  (items.length?'<div class="reminder-list">'+items.map(x=>'<div class="reminder-item '+(x.diff===0?'today':'soon')+'"><div><strong>'+esc(x.e.name)+'</strong><small>'+ (x.diff===0?'Σήμερα':'Σε '+x.diff+' μέρ'+(x.diff===1?'α':'ες')) +' · '+fmtDate(x.date.toISOString().slice(0,10))+'</small></div><strong>'+euro(x.e.amount)+'</strong></div>').join('')+'</div>':'<div class="empty-oneoff">Δεν υπάρχει πληρωμή μέσα στις επόμενες '+Number(state.reminderPrefs.leadDays||0)+' ημέρες.</div>')+
  (all.length?'<div class="mini" style="margin-top:8px">Έχουν οριστεί ημέρες πληρωμής για '+all.length+' πάγια.</div>':'')+'</section>';
 }
@@ -59,6 +59,7 @@ render=function(){
  const target=app?.querySelector('.flow-forecast')||app?.querySelector('.summary');
  if(target)target.insertAdjacentHTML('afterend',reminderPanel(curMonth()));
  const b=document.getElementById('editReminders'); if(b)b.onclick=settingsModal;
+ const n=document.getElementById('enableNotifications'); if(n)n.onclick=async()=>{const ok=await window.enableMaziNotifications();alert(ok?'Οι ειδοποιήσεις ενεργοποιήθηκαν. Θα εμφανίζονται όταν ανοίγεις την εφαρμογή κοντά σε ημερομηνία πληρωμής.':'Δεν δόθηκε άδεια ειδοποιήσεων από τη συσκευή/browser.');};
  maybeNotify();
 };
 window.enableMaziNotifications=async()=>{if(!('Notification' in window))return false;const p=await Notification.requestPermission();state.reminderPrefs.notifications=p==='granted';save();return p==='granted'};
