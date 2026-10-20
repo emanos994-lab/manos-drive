@@ -1,0 +1,34 @@
+:root{
+ --bg:#f3f6f8;--card:#ffffff;--text:#172433;--muted:#748293;--line:#e2e8ee;
+ --blue:#7eaee0;--blue2:#edf5fc;--green:#4fa579;--red:#c85f6b;--orange:#c89349;
+ --purple:#715ea2;--purple2:#f4f1fb;--shadow:0 8px 28px rgba(36,55,75,.055);
+ --radius:16px
+}
+html{background:var(--bg)}body{background:radial-gradient(circle at 12% -10%,#eaf3fb 0,transparent 34%),radial-gradient(circle at 92% 0,#edf7f2 0,transparent 28%),var(--bg);color:var(--text)}
+.shell{max-width:940px;padding:0 18px}.topbar{padding:18px 0 11px;background:rgba(243,246,248,.9);border-bottom:0}.topbar .eyebrow{font-size:9px;letter-spacing:.11em;color:#8391a0}.topbar h1{font-size:25px;letter-spacing:-.03em}
+.sync-status-btn{height:36px;border-radius:999px;padding:0 11px;background:rgba(255,255,255,.84);font-size:11px;border-color:#dde5ec}
+.tabs{padding:5px;background:rgba(231,236,241,.82);border:1px solid #dfe6ec;border-radius:15px;gap:4px;margin:4px 0 15px}.tabs button{padding:9px 6px;border-radius:10px;font-size:11px;font-weight:790;color:#657587;transition:.15s ease}.tabs button:hover{background:rgba(255,255,255,.6)}.tabs button.active{background:#fff;color:#1c3043;border:1px solid #dce4eb;box-shadow:0 3px 10px rgba(38,58,78,.045)}
+.workspace,.section,.clean-panel,.stats-top>div,.wedding-progress-card,.wedding-scenarios>div{background:rgba(255,255,255,.94);border-color:var(--line);box-shadow:var(--shadow)!important}.workspace{padding:12px 13px;border-radius:15px}.cycle-banner{background:#f7fafc!important;border-color:#e0e8ef!important}
+.clean-dashboard{gap:9px;margin:9px 0 10px}.clean-hero{background:linear-gradient(145deg,#f0f8f4,#ffffff);border-color:#d7eadf!important;border-radius:17px;padding:16px!important}.clean-hero small{color:#789084}.clean-hero strong{font-size:31px!important;letter-spacing:-.035em}.clean-stats{gap:7px}.clean-stats>div{padding:10px 11px;background:rgba(255,255,255,.96);border-color:#e3e9ee}.clean-stats small{min-height:auto}.clean-actions{gap:6px}.clean-actions .btn{font-size:11px;padding:8px 10px}
+.clean-panel{border-radius:14px!important;margin:7px 0!important;overflow:hidden}.clean-panel>summary{padding:11px 12px!important;background:#fff!important}.clean-panel>summary span{font-size:12px!important}.clean-panel>summary small{font-size:9px!important;font-weight:700}.clean-panel[open]>summary{background:#f9fbfc!important}.clean-panel>.section{background:#fff}
+.section{border-radius:15px!important;padding:13px!important;margin:8px 0!important}.section h2{font-size:15px!important;letter-spacing:-.01em}.section p{font-size:10px!important}.section-head{margin-bottom:8px!important}
+.money-row,.oneoff-row{border-radius:11px!important;background:#fbfcfd!important;border-color:#e5eaef!important;padding:9px 10px!important}.money-row label,.oneoff-title strong{font-size:11px}.record-date,.oneoff-meta,.flow-expense-label small{color:#8592a0!important}
+.btn{border-radius:9px!important;font-size:11px}.btn.primary{background:#7faedf}.btn.soft{background:#edf4fb;color:#355d80}.btn.green{background:#e7f5ed;color:#2f7050}.btn.warn{background:#fbf2e4;color:#7d5b2e}.btn.danger{background:#faeeee;color:#a04a54}
+.field label{font-size:9px!important;letter-spacing:.01em}.field input,.field select{border-radius:9px!important;border-color:#dfe6ec!important;background:#fff;padding:8px 9px!important;font-size:12px}
+.notice{font-size:10px!important;border-radius:11px!important}
+.stats-top,.stats-compare{gap:7px}.stats-top>div,.stats-change{border-radius:13px!important;padding:11px!important}.stats-top strong,.stats-change strong{letter-spacing:-.02em}
+.page-intro{padding:3px 1px 0}.page-intro h2{font-size:21px!important;letter-spacing:-.03em}.page-intro p{font-size:10px!important}
+.tool-switcher{background:#e9eef3!important;border:1px solid #dfe6ec!important;padding:4px!important}.tool-switcher button{font-size:11px!important}
+.modal{border-radius:18px!important;box-shadow:0 24px 70px rgba(26,39,54,.18)!important}.modal-inner{padding:17px!important}.modal-head h2{font-size:18px!important}
+.wedding-head h2{letter-spacing:-.035em}.wedding-progress-card,.wedding-verdict,.wedding-scenarios>div,.money-pulse{box-shadow:var(--shadow)}
+.wedding-progress i{background:linear-gradient(90deg,#78aee4,#63b68d)!important}
+.credit-balance-card{background:#f7fafc!important;border-color:#dfe7ef!important}
+@media(max-width:700px){
+ body{padding-bottom:86px}.shell{padding:0 10px}.topbar{padding:11px 1px 8px}.topbar h1{font-size:21px}
+ .tabs{left:7px!important;right:7px!important;bottom:7px!important;padding:4px!important;background:rgba(237,241,244,.94)!important;box-shadow:0 10px 35px rgba(29,44,59,.14)!important}
+ .tabs button{font-size:9px!important;padding:9px 2px!important;border-radius:9px!important}
+ .clean-hero{padding:14px!important}.clean-hero strong{font-size:28px!important}.clean-stats>div{padding:9px!important}
+ .clean-panel>summary{min-height:42px}.section{padding:11px!important}
+ .wedding-progress-card{padding:13px}.wedding-verdict{padding:12px}.wedding-scenarios>div{padding:10px}
+}
+@media(max-width:390px){.tabs button{font-size:8.4px!important}.shell{padding:0 8px}}
