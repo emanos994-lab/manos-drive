@@ -11,7 +11,9 @@ function statMonthData(key){
     key,m,income,expense,saved,oneoffs,expected,
     deiAmount:Number(dei?.amount||0),
     deiKnown:dei?.actualKnown===true,
-    deiEntered:dei?.actualEnteredAt||''
+    deiEntered:dei?.actualEnteredAt||'',
+    deiCreated:dei?.createdAt||dei?.actualEnteredAt||'',
+    deiUpdated:dei?.updatedAt||dei?.actualEnteredAt||''
   };
 }
 function statKeys(){return Object.keys(state.months||{}).sort()}
@@ -52,7 +54,7 @@ function monthlyHistory(rows){
 function deiHistory(rows){
   const list=rows.slice().reverse().filter(r=>r.m?.expenses?.some(x=>x.id==='e19'||x.name==='ΔΕΗ'));
   if(!list.length)return '<div class="stats-empty">Δεν υπάρχει ιστορικό ΔΕΗ ακόμα.</div>';
-  return '<div class="dei-history">'+list.map(r=>'<div class="dei-history-row"><div><strong>'+esc(monthLabel(r.key))+'</strong><small>'+(r.deiKnown?(r.deiEntered?'Καταχωρήθηκε '+fmtDate(r.deiEntered):'Ποσό επιβεβαιωμένο'):'Προσωρινή εκτίμηση')+'</small></div><strong>'+euro(r.deiAmount)+'</strong></div>').join('')+'</div>';
+  return '<div class="dei-history">'+list.map(r=>{const dates=r.deiCreated?('Καταχωρήθηκε '+fmtDate(r.deiCreated)+(r.deiUpdated&&r.deiUpdated!==r.deiCreated?' · Τελ. αλλαγή '+fmtDate(r.deiUpdated):'')):(r.deiKnown?'Ποσό επιβεβαιωμένο':'Προσωρινή εκτίμηση');return '<div class="dei-history-row"><div><strong>'+esc(monthLabel(r.key))+'</strong><small>'+dates+'</small></div><strong>'+euro(r.deiAmount)+'</strong></div>'}).join('')+'</div>';
 }
 function statsView(){
   const s=statSummary(),rows=s.rows,best=s.best;
