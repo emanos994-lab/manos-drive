@@ -59,7 +59,7 @@ function statsView(){
   const latest=rows.length?rows[rows.length-1]:null;
   return '<div class="page-intro"><div><small>Ιστορικό</small><h2>Στατιστικά κύκλων</h2><p>Για να βλέπετε τι άλλαξε από μήνα σε μήνα και πού πήγαν τα χρήματα.</p></div></div>'+
   '<section class="stats-top">'+
-    '<div><small>Συνολικά στην άκρη</small><strong>'+euro(balanceThroughMonth(state.activeMonth))+'</strong></div>'+
+    '<div><small>Συνολικά στην άκρη</small><strong>'+euro(balanceThroughMonth(rows.length?rows[rows.length-1].key:state.activeMonth))+'</strong></div>'+
     '<div><small>Μέση αποταμίευση / κύκλο</small><strong>'+euro(s.avgSaved)+'</strong></div>'+
     '<div><small>Μέσα έξοδα / κύκλο</small><strong>'+euro(s.avgExpense)+'</strong></div>'+
     '<div><small>Καλύτερος κύκλος</small><strong>'+(best?euro(best.saved):'—')+'</strong><span>'+(best?esc(monthLabel(best.key)):'Δεν υπάρχει ακόμα')+'</span></div>'+
