@@ -38,9 +38,13 @@ function historicalVolatility(){
   const variance=vals.reduce((s,v)=>s+Math.pow(v-avg,2),0)/vals.length;
   return Math.max(.10,Math.min(.35,Math.sqrt(variance)/Math.max(1,avg)));
 }
-function monthModel(key,base,vol){
+function liveKey(){
+  const keys=Object.keys(state.months||{}).filter(k=>k<=monthNow()).sort();
+  return keys[keys.length-1]||state.activeMonth;
+}
+function monthModel(key,base,vol,currentKey){
   const existing=state.months?.[key];
-  const active=key===state.activeMonth;
+  const active=key===currentKey;
   const m=existing||base;
   const income=existing?monthIncome(m):sum(base.incomes||[]);
   const recurring=recurringExpense(m);
@@ -59,11 +63,11 @@ function monthModel(key,base,vol){
   return {key,income,expense,seasonal,extras,baseSave,careful,strong,existing:!!existing};
 }
 function weddingProjection(){
-  const w=ensureWedding(),base=curMonth(),start=balanceThroughMonth(state.activeMonth),vol=historicalVolatility();
-  const keys=keysThrough(state.activeMonth,w.targetMonth);
+  const w=ensureWedding(),currentKey=liveKey(),base=state.months[currentKey]||curMonth(),start=balanceThroughMonth(currentKey),vol=historicalVolatility();
+  const keys=keysThrough(currentKey,w.targetMonth);
   let b=start,c=start,s=start;
   const rows=keys.map(k=>{
-    const r=monthModel(k,base,vol);
+    const r=monthModel(k,base,vol,currentKey);
     b+=r.baseSave;c+=r.careful;s+=r.strong;
     return {...r,baseBalance:b,carefulBalance:c,strongBalance:s};
   });
@@ -99,19 +103,16 @@ function weddingView(){
 }
 adviceView=weddingView;
 
-function currentSavings(){
-  const k=monthNow();
-  return balanceThroughMonth(k);
-}
+function currentSavings(){return balanceThroughMonth(liveKey())}
 function savingsMaxEver(){
   const tx=(state.savingsTx||[]).slice().sort((a,b)=>String(a.monthKey||'').localeCompare(String(b.monthKey||''))||String(a.date||'').localeCompare(String(b.date||'')));
   let bal=0,max=0;for(const x of tx){bal+=Number(x.amount||0);max=Math.max(max,bal)}return max;
 }
 function pulseData(){
-  const w=ensureWedding(),m=curMonth(),floor=Number(w.floor||500),bal=currentSavings(),max=savingsMaxEver();
+  const w=ensureWedding(),k=liveKey(),m=state.months[k]||curMonth(),floor=Number(w.floor||500),bal=currentSavings(),max=savingsMaxEver();
   const forecast=monthIncome(m)-monthExpense(m);
   const oneoffs=(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0),income=monthIncome(m);
-  const prior=Math.max(0,balanceBeforeMonth(m.key)),net=monthSavingsNet(m.key);
+  const prior=Math.max(0,balanceBeforeMonth(k)),net=monthSavingsNet(k);
   if(max>=floor&&bal<floor)return {tone:'danger',label:'Οριακό',title:'Η άκρη έπεσε κάτω από '+euro(floor),text:'Είχατε περάσει το όριο ασφαλείας και τώρα είστε στα '+euro(bal)+'. Δεν μπλοκάρει τίποτα, απλώς το επισημαίνει.'};
   if(forecast<0)return {tone:'danger',label:'Προσοχή',title:'Ο κύκλος βγαίνει αρνητικός',text:'Με όσα έχουν καταχωρηθεί τώρα λείπουν περίπου '+euro(Math.abs(forecast))+'.'};
   if(net<0&&Math.abs(net)>Math.max(50,prior*.10))return {tone:'watch',label:'Έλεγχος',title:'Έγινε αισθητή ανάληψη από την άκρη',text:'Αφαιρέθηκαν καθαρά '+euro(Math.abs(net))+' αυτόν τον κύκλο. Απλώς τσέκαρε ότι ήταν συνειδητή επιλογή.'};
