@@ -29,7 +29,9 @@ function refreshStatus(x){
   x.status=r<=0.005?'paid':r<a-0.005?'partial':'pending';
 }
 function cycleOutstanding(m){return (m.extraExpenses||[]).reduce((s,x)=>s+dueFor(x),0)}
+function cyclePaid(m){return (m.extraExpenses||[]).reduce((s,x)=>s+paidFor(x),0)}
 window.maziOneOffOutstanding=cycleOutstanding;
+window.maziPaidExtra=cyclePaid;
 if(typeof unpaidOneOff==='function')unpaidOneOff=function(m){return cycleOutstanding(m)};
 
 function splitMoney(total,count){
@@ -52,8 +54,8 @@ function installmentModal(){
     '<div class="field"><label>Τι αγοράσαμε / χρωστάμε</label><input name="name" required placeholder="π.χ. Παπούτσια"></div>'+
     '<div class="field"><label>Συνολικό ποσό αγοράς</label><input name="amount" type="number" min="0.01" step="0.01" required></div>'+
     '<div class="field"><label>Ημερομηνία αγοράς</label><input name="date" type="date" value="'+isoToday()+'"></div>'+
-    '<div class="field"><label>Τρόπος</label><select name="method" id="purchaseMethod"><option>Klarna</option><option>Πιστωτική</option><option>Χρεωστική / Τράπεζα</option><option>Μετρητά</option><option>Άλλο</option></select></div>'+
-    '<div class="field"><label>Δόσεις</label><select name="installments" id="purchaseInstallments">'+Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+(i===2?'selected':'')+'>'+(i+1)+(i===0?' δόση':' δόσεις')+'</option>').join('')+'</select></div>'+
+    '<div class="field"><label>Τρόπος</label><select name="method" id="purchaseMethod"><option selected>Άλλο</option><option>Χρεωστική / Τράπεζα</option><option>Μετρητά</option><option>Πιστωτική</option><option>Klarna</option></select></div>'+
+    '<div class="field"><label>Δόσεις</label><select name="installments" id="purchaseInstallments">'+Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+(i===0?'selected':'')+'>'+(i+1)+(i===0?' δόση':' δόσεις')+'</option>').join('')+'</select></div>'+
     '<div class="field"><label>1η πληρωμή / λήξη</label><input name="dueDate" type="date" value="'+defaultDue+'"></div>'+
     '<div class="field"><label>Η πρώτη δόση</label><select name="status"><option value="pending">Δεν έχει πληρωθεί</option><option value="paid">Πληρώθηκε ήδη</option></select></div>'+
     '</div>'+
@@ -80,6 +82,8 @@ function installmentModal(){
         target.extraExpenses.push(x);
       }
     },'Καταχώριση αγοράς');
+  const method=document.getElementById('purchaseMethod'),inst=document.getElementById('purchaseInstallments');
+  if(method&&inst)method.onchange=()=>{if(method.value==='Klarna'&&inst.value==='1')inst.value='3'};
 }
 function paymentModal(id){
   const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
@@ -99,6 +103,7 @@ function paymentModal(id){
     refreshStatus(x);x.updatedAt=isoToday();save();document.getElementById('modal')?.close();render();
   });
 }
+function rowIcon(x){const m=String(x.method||'');if(m==='Klarna')return '🛍️';if(m.includes('Πιστω'))return '💳';if(m.includes('Χρεωσ'))return '🏦';if(m.includes('Μετρητ'))return '💶';return '🧾'}
 function rowHtml(x){
   const paid=paidFor(x),due=dueFor(x),partial=paid>0&&due>0.005;
   const method=x.method||'Άλλο';
@@ -107,7 +112,7 @@ function rowHtml(x){
   const badge=due<=0.005?'done':partial?'part':'owe';
   const dates=(x.createdAt?('Καταχωρήθηκε '+fmtDate(x.createdAt)+(x.updatedAt&&x.updatedAt!==x.createdAt?' · Τελ. αλλαγή '+fmtDate(x.updatedAt):'')):'');
   return '<div class="oneoff-row '+(due<=0.005?'paid':'pending')+' partial-oneoff">'+
-    '<div class="oneoff-main"><div class="oneoff-title"><strong>'+((typeof iconTitle==='function')?iconTitle(x,'expense'):esc(x.name))+'</strong>'+inst+'<span class="oneoff-badge '+badge+'">'+state+'</span></div>'+
+    '<div class="oneoff-main"><div class="oneoff-title"><strong>'+rowIcon(x)+' '+esc(x.name)+'</strong>'+inst+'<span class="oneoff-badge '+badge+'">'+state+'</span></div>'+
     '<div class="oneoff-meta">'+esc(method)+(x.dueDate?' · λήξη '+fmtDate(x.dueDate):'')+(dates?' · '+dates:'')+'</div>'+
     '<div class="partial-progress"><span>Πληρώθηκαν <strong>'+euro(paid)+'</strong></span><span>Υπόλοιπο <strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></span></div></div>'+
     '<input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="r-extraExpense" data-id="'+x.id+'">'+
