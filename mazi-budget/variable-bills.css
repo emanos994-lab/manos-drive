@@ -1,1 +1,6 @@
 .variable-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.variable-badge{font-size:9px;font-weight:900;padding:3px 6px;border-radius:999px;background:#eef5ff;color:#466b91;border:1px solid #d7e7f8}.variable-bill input[type=number]{background:#fffdf6}.variable-help{margin:0 0 10px!important;background:#fff9ef!important;border-color:#efdcb8!important;color:#72562f!important}
+.record-label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.record-date{display:block;color:#8794a3!important;font-size:9px!important;font-weight:700!important;line-height:1.25;margin-top:2px}
+.flow-expense-label .record-date,.oneoff-main .record-date{margin-top:3px}
+.record-money-row label{font-weight:760}
+@media(max-width:540px){.record-date{font-size:8.5px!important}}
