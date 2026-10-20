@@ -45,7 +45,7 @@ function monthModel(key,base,vol){
   const income=existing?monthIncome(m):sum(base.incomes||[]);
   const recurring=recurringExpense(m);
   const extras=existing?(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
-  const expense=recurring+extras;
+  const expense=existing?monthExpense(m):recurring;
   const flex=flexibleExpense(m,!!existing);
   const stable=Math.max(0,expense-flex);
   const seasonal=seasonalForWedding(key);
@@ -89,7 +89,7 @@ function weddingView(){
   const remain=Math.max(0,target-p.start),months=Math.max(1,p.rows.length),need=remain/months;
   const pct=target>0?Math.max(0,Math.min(100,p.start/target*100)):0;
   const gifts=p.rows.reduce((s,r)=>s+r.seasonal,0);
-  return '<div class="wedding-head"><div><small>Κοινός στόχος</small><h2>💍 Γάμος · Οκτώβριος 2027</h2><p>Η πρόβλεψη ενημερώνεται από τα πραγματικά έσοδα, έξοδα, δόσεις, αποταμίευση και τα δώρα/επιδόματα της εφαρμογής.</p></div><div class="wedding-target-pill">'+euro(target)+'</div></div>'+
+  return '<div class="wedding-head"><div><small>Κοινός στόχος</small><h2>💍 Γάμος · '+esc(monthLabel(w.targetMonth))+'</h2><p>Η πρόβλεψη ενημερώνεται από τα πραγματικά έσοδα, έξοδα, δόσεις, αποταμίευση και τα δώρα/επιδόματα της εφαρμογής.</p></div><div class="wedding-target-pill">'+euro(target)+'</div></div>'+
   '<section class="wedding-progress-card"><div class="wedding-progress-top"><div><small>Έχετε ήδη στην άκρη</small><strong>'+euro(p.start)+'</strong></div><div><small>Μένουν για τον στόχο</small><strong>'+euro(remain)+'</strong></div><div><small>Μέσος ρυθμός που χρειάζεται</small><strong>'+euro(need)+'/μήνα</strong></div></div><div class="wedding-progress"><i style="width:'+pct+'%"></i></div><span>'+Math.round(pct)+'% του στόχου</span></section>'+
   '<section class="wedding-verdict '+status.tone+'"><div><small>Πρόβλεψη</small><h3>'+status.title+'</h3><p>'+status.text+'</p></div><strong>'+euro(p.baseEnd)+'</strong></section>'+
   '<section class="wedding-scenarios"><div><small>Πιο ακριβοί μήνες</small><strong>'+euro(p.carefulEnd)+'</strong><span>με μεγαλύτερη μεταβλητή δαπάνη</span></div><div class="main"><small>Βασική πρόβλεψη</small><strong>'+euro(p.baseEnd)+'</strong><span>με τα σημερινά δεδομένα</span></div><div><small>Πιο ήσυχοι μήνες</small><strong>'+euro(p.strongEnd)+'</strong><span>με χαμηλότερη μεταβλητή δαπάνη</span></div></section>'+
