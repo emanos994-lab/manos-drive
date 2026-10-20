@@ -19,9 +19,10 @@
 <link rel="stylesheet" href="./cleanui.css?v=1">
 <link rel="stylesheet" href="./tabs-clean.css?v=1">
 <link rel="stylesheet" href="./variable-bills.css?v=2">
+<link rel="stylesheet" href="./installments.css?v=1">
 <link rel="stylesheet" href="./stats.css?v=1">
 <link rel="stylesheet" href="./redesign.css?v=1">
-<title>Μαζί — Οικονομικά v7.6</title>
+<title>Μαζί — Οικονομικά v7.7</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--text:#203247;--muted:#78899d;--line:#e2e9f1;--blue:#8bbcf2;--blue2:#dcecff;--green:#3aaa78;--red:#d35d69;--orange:#d99a43;--orange2:#fff3df;--purple:#795db8;--purple2:#f1ebff;--shadow:0 14px 40px rgba(45,62,86,.08)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding-bottom:40px}
@@ -131,8 +132,8 @@ function realView(){
  '<section class="summary"><div class="kpi"><small>Έσοδα</small><strong>'+euro(inc)+'</strong></div><div class="kpi"><small>Έξοδα</small><strong>'+euro(exp)+'</strong></div><div class="kpi remain"><small>Μένουν μετά την άκρη</small><strong class="'+(rem<0?'negative':'')+'">'+euro(rem)+'</strong></div><div class="kpi savings"><small>Στην άκρη έως '+esc(monthLabel(m.key))+'</small><strong>'+euro(bal)+'</strong></div></section>'+
  '<section class="section"><div class="section-head"><div><h2>Έσοδα</h2><p>Κάθε μήνας έχει τα δικά του ποσά.</p></div><button class="btn soft" data-add="r-income">+ Άλλο</button></div><div class="list">'+m.incomes.map(x=>incomeRow(x,'income',false,true)).join('')+m.extraIncomes.map(x=>incomeRow(x,'extraIncome',false,false)).join('')+'</div><div class="total-line"><span>Σύνολο εσόδων</span><strong>'+euro(inc)+'</strong></div></section>'+
  '<section class="section"><div class="section-head"><div><h2>Πάγια</h2><p>Τα πάγια δεν διαγράφονται. Ξετικάρεις όποιο δεν ισχύει μόνο αυτόν τον μήνα.</p></div></div><div class="list">'+m.expenses.map(x=>recurringRow(x,false)).join('')+'</div></section>'+
- '<section class="section oneoff-section"><div class="section-head"><div><h2>Έξοδα μόνο αυτού του μήνα</h2><p>Αγορές, Klarna, οφειλές ή οτιδήποτε έγινε τώρα και πρέπει να αφαιρεθεί στην πληρωμή. Δεν μεταφέρονται στον επόμενο μήνα.</p></div><button class="btn soft" data-add="r-expense">+ Έξοδο μήνα</button></div>'+
- '<div class="oneoff-summary"><span>Σύνολο έκτακτων: <strong>'+euro(sum(m.extraExpenses))+'</strong></span><span>Απλήρωτα: <strong class="negative">'+euro((m.extraExpenses||[]).filter(x=>x.status!=="paid").reduce((s,x)=>s+Number(x.amount||0),0))+'</strong></span></div>'+
+ '<section class="section oneoff-section"><div class="section-head"><div><h2>Έξοδα μόνο αυτού του μήνα</h2><p>Αγορές, Klarna και οφειλές. Οι απλές αγορές μένουν σε αυτόν τον κύκλο, ενώ οι δόσεις μπαίνουν αυτόματα και στους επόμενους.</p></div><button class="btn soft" data-add="r-expense">+ Έξοδο μήνα</button></div>'+
+ '<div class="oneoff-summary"><span>Σύνολο έκτακτων: <strong>'+euro(sum(m.extraExpenses))+'</strong></span><span>Υπόλοιπο για πληρωμή: <strong class="negative">'+euro(window.maziOneOffOutstanding?window.maziOneOffOutstanding(m):(m.extraExpenses||[]).filter(x=>x.status!=="paid").reduce((s,x)=>s+Number(x.amount||0),0))+'</strong></span></div>'+
  '<div class="oneoff-list">'+(m.extraExpenses.length?m.extraExpenses.map(x=>extraExpenseRow(x,false)).join(""):'<div class="empty-oneoff">Δεν έχεις έκτακτο έξοδο για αυτόν τον μήνα.</div>')+'</div>'+
  '<div class="total-line"><span>Σύνολο εξόδων μήνα (πάγια + έκτακτα)</span><strong>'+euro(exp)+'</strong></div></section>'+
  '<section class="section"><div class="section-head"><div><h2>Αποταμίευση</h2><p>Το υπόλοιπο μεταφέρεται αυτόματα στους επόμενους μήνες.</p></div></div><div class="save-grid"><div class="save-card"><small>Από προηγούμενους μήνες</small><strong>'+euro(prior)+'</strong><div class="mini" style="margin-top:8px">Υπάρχει ήδη όταν ξεκινά ο '+esc(monthLabel(m.key))+'.</div></div><div class="save-card"><small>Κίνηση αυτού του μήνα</small><strong class="'+(net>=0?'positive':'negative')+'">'+(net>=0?'+':'')+euro(net)+'</strong><div class="save-form"><input id="saveAmount" type="number" min="0" step="0.01" placeholder="Ποσό"><button class="btn green" id="saveMoney">Στην άκρη</button></div></div><div class="save-card"><small>Υπόλοιπο έως το τέλος του μήνα</small><strong>'+euro(bal)+'</strong><div class="save-form"><button class="btn ghost" id="takeMoney" style="width:100%">Αφαίρεση από την άκρη</button></div></div></div>'+
@@ -224,6 +225,7 @@ render();
 <script src="./cleanui.js?v=1"></script>
 <script src="./tabs-clean.js?v=1"></script>
 <script src="./variable-bills.js?v=4"></script>
+<script src="./installments.js?v=1"></script>
 <script src="./stats.js?v=2"></script>
 <script src="./sync.js?v=10"></script><script>if(window.initMaziSync)window.initMaziSync();</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
