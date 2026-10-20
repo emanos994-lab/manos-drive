@@ -1,156 +1,34 @@
-
 (()=>{
-const ENDPOINT='https://script.google.com/macros/s/AKfycbw6mVPR3XbfUn4YTVrBmLdezHi8IEBmmOBDfQjPXqZ4GePqsfaz9VWQZSMDQfZVfTPmCA/exec';
-const CHANNEL='mazi-sync-form-v1';
-const K={secret:'mazi-sync-secret-v1',actor:'mazi-sync-actor-v1',device:'mazi-sync-device-v1',version:'mazi-sync-version-v1',bound:'mazi-sync-bound-v1',dirty:'mazi-sync-dirty-v1'};
-let busy=false,waiters=new Map(),pullTimer=null,pushTimer=null;
+const OLD_KEYS=[
+  'mazi-sync-secret-v1',
+  'mazi-sync-actor-v1',
+  'mazi-sync-device-v1',
+  'mazi-sync-version-v1',
+  'mazi-sync-bound-v1',
+  'mazi-sync-dirty-v1',
+  'mazi-sync-conflict-backup'
+];
 
-const get=k=>localStorage.getItem(k)||'';
-const set=(k,v)=>localStorage.setItem(k,String(v));
-const secret=()=>get(K.secret);
-const actor=()=>get(K.actor)||'Μάνος';
-const bound=()=>get(K.bound)==='1';
-const dirty=()=>get(K.dirty)==='1';
-const version=()=>Number(get(K.version)||0);
-const setStatus=(st,txt)=>{const b=document.getElementById('syncStatusButton'),t=document.getElementById('syncStatusText');if(b)b.dataset.state=st||'';if(t)t.textContent=txt||'Sync';};
-const refresh=()=>{if(!secret())return setStatus('','Σύνδεση');if(!navigator.onLine)return setStatus('offline','Offline');if(dirty())return setStatus('pending','Αναμονή');if(bound())return setStatus('synced','✓ Sync');setStatus('working','Σύνδεση…');};
-const device=()=>{let id=get(K.device);if(!id){id=crypto.randomUUID?crypto.randomUUID():'d'+Date.now()+Math.random().toString(36).slice(2);set(K.device,id)}return id};
-const meaningful=()=>Number(state?.schema||0)>=5?Boolean(Object.keys(state.months||{}).length||(state.savingsTx||[]).length||(state.tests||[]).length):Boolean(state.setupComplete||Number(state.savings||0)||(state.wallets||[]).some(w=>Number(w.balance||0))||(state.incomes||[]).length||(state.expenses||[]).length);
-
-const b64=u=>{let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode(...u.subarray(i,i+32768));return btoa(s)};
-const unb64=s=>{const x=atob(s),u=new Uint8Array(x.length);for(let i=0;i<x.length;i++)u[i]=x.charCodeAt(i);return u};
-async function hex(s){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function key(sec,salt,it){const b=await crypto.subtle.importKey('raw',new TextEncoder().encode(sec),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},b,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function enc(obj){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),it=120000,k=await key(secret(),salt,it),pt=new TextEncoder().encode(JSON.stringify(obj)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,pt));return JSON.stringify({v:1,iter:it,salt:b64(salt),iv:b64(iv),ct:b64(ct)})}
-async function dec(payload){const e=JSON.parse(payload),salt=unb64(e.salt),iv=unb64(e.iv),ct=unb64(e.ct),k=await key(secret(),salt,Number(e.iter||120000)),pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},k,ct);return JSON.parse(new TextDecoder().decode(pt))}
-
-window.addEventListener('message',ev=>{
- const m=ev.data||{};
- if(m.channel!==CHANNEL||m.type!=='response'||!m.id||!waiters.has(m.id))return;
- const w=waiters.get(m.id);
- waiters.delete(m.id);
- clearTimeout(w.t);
- w.cleanup();
- w.r(m.result);
-});
-function call(req){
- return new Promise((r,j)=>{
-   const id=crypto.randomUUID?crypto.randomUUID():'q'+Date.now()+Math.random().toString(36).slice(2);
-   const frameName='mazi_sync_'+id.replace(/[^a-zA-Z0-9_]/g,'');
-   const iframe=document.createElement('iframe');
-   iframe.name=frameName;
-   iframe.setAttribute('aria-hidden','true');
-   iframe.style.cssText='position:fixed;width:1px;height:1px;left:-10000px;top:-10000px;border:0;opacity:0;pointer-events:none';
-   const form=document.createElement('form');
-   form.method='POST';
-   form.action=ENDPOINT;
-   form.target=frameName;
-   form.style.display='none';
-   const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)};
-   add('id',id);
-   add('request',JSON.stringify(req));
-   const cleanup=()=>{try{form.remove()}catch{}setTimeout(()=>{try{iframe.remove()}catch{}},80)};
-   const t=setTimeout(()=>{waiters.delete(id);cleanup();j(new Error('Timeout sync'))},30000);
-   waiters.set(id,{r,j,t,cleanup});
-   document.body.appendChild(iframe);
-   document.body.appendChild(form);
-   form.submit();
- });
+function removeLegacySync(){
+  for(const k of OLD_KEYS)localStorage.removeItem(k);
 }
-const auth=()=>hex('mazi-auth-v1:'+secret());
 
-function applyRemote(remote,v){state=window.maziNormalizeState?window.maziNormalizeState(remote||{}):(remote||{});localStorage.setItem(storeKey,JSON.stringify(state));set(K.version,v);set(K.bound,1);set(K.dirty,0);render();setStatus('synced','✓ Sync')}
-async function pull(initial=false){
- if(!secret()||!navigator.onLine||busy||dirty())return;
- busy=true;setStatus('working','Sync…');
- try{
-  const res=await call({action:'pull',auth:await auth()});
-  if(!res?.ok)throw new Error(res?.error||'pull');
-  if(!res.payload||Number(res.version||0)===0){
-    set(K.version,0);setStatus('working','Cloud κενό');
-    if(initial)firstUploadPrompt();
-    return;
+function setLocalStatus(){
+  const b=document.getElementById('syncStatusButton');
+  const t=document.getElementById('syncStatusText');
+  if(b){
+    b.dataset.state='';
+    b.disabled=true;
+    b.title='Ο παλιός συγχρονισμός με κοινό κωδικό έχει καταργηθεί. Η εφαρμογή λειτουργεί τοπικά μέχρι να συνδεθεί το νέο login με email.';
   }
-  const v=Number(res.version||0);
-  if(bound()&&v<=version()){setStatus('synced','✓ Sync');return}
-  const remote=await dec(res.payload);
-  if(!bound()&&meaningful()){
-    showModal('Υπάρχουν ήδη κοινά δεδομένα','<div class="notice">Το Google cloud έχει ήδη δεδομένα. Για ασφάλεια θα φορτώσουμε την κοινή έκδοση σε αυτή τη συσκευή.</div>',()=>{setTimeout(()=>applyRemote(remote,v),80)},'Χρήση cloud');
-  }else applyRemote(remote,v);
- }catch(e){
-  console.error(e);
-  setStatus('error',String(e?.message||'').includes('Unauthorized')?'Κωδικός':'⚠ Sync');
- }finally{
-  busy=false;
- }
+  if(t)t.textContent='Τοπικά';
 }
-async function push(force=false){
- if(!secret()||(!bound()&&!force)||busy)return;
- if(!navigator.onLine){set(K.dirty,1);refresh();return}
- busy=true;setStatus('working','Sync…');
- const snap=structuredClone(state);
- try{
-  const res=await call({action:'push',auth:await auth(),payload:await enc(snap),updatedBy:actor(),deviceId:device(),clientVersion:version()});
-  if(!res?.ok){
-    if(res?.conflict){
-      localStorage.setItem('mazi-sync-conflict-backup',JSON.stringify(snap));
-      set(K.version,res.serverVersion||0);
-      set(K.bound,0);
-      set(K.dirty,0);
-      alert('Υπήρξε ταυτόχρονη αλλαγή από άλλη συσκευή. Κράτησα αντίγραφο ασφαλείας και θα φορτώσω την κοινή έκδοση.');
-      setTimeout(()=>pull(false),150);
-      return;
-    }
-    throw new Error(res?.error||'push');
-  }
-  set(K.version,res.version);
-  set(K.bound,1);
-  set(K.dirty,0);
-  setStatus('synced','✓ Sync');
- }catch(e){
-  console.error(e);
-  set(K.dirty,1);
-  setStatus(navigator.onLine?'error':'offline',navigator.onLine?'⚠ Sync':'Offline');
- }finally{
-  busy=false;
- }
-}
-function firstUploadPrompt(){
- if(window.__maziFirstPrompt)return;
- window.__maziFirstPrompt=true;
- const warn=!meaningful()?'<div class="warning notice" style="margin-top:12px">Αυτή η συσκευή φαίνεται άδεια. Αν τα σωστά ποσά είναι στο iPhone, κάνε την πρώτη σύνδεση από εκεί.</div>':'';
- showModal('Πρώτος συγχρονισμός','<div class="notice"><strong>Το κοινό cloud είναι άδειο.</strong><br><br>Η πρώτη συσκευή πρέπει να είναι αυτή που έχει τη σωστή σημερινή εικόνα.</div>'+warn,()=>{setTimeout(()=>push(true),100)},'Ανέβασμα αυτής της συσκευής');
-}
-function settings(){
- const has=!!secret(),a=actor();
- showModal('Κοινός συγχρονισμός','<div class="notice">Τα οικονομικά ανεβαίνουν κρυπτογραφημένα. Ο κοινός κωδικός μένει μόνο σε αυτή τη συσκευή.</div><div class="form-grid" style="margin-top:14px"><div class="field"><label>Χρήστης</label><select name="actor"><option value="Μάνος" '+(a==='Μάνος'?'selected':'')+'>Μάνος</option><option value="Πένυ" '+(a==='Πένυ'?'selected':'')+'>Πένυ</option></select></div><div class="field"><label>Κοινός κωδικός sync</label><input name="secret" type="password" '+(has?'':'required')+' placeholder="'+(has?'Άφησέ το κενό για να μείνει ίδιο':'Βάλε το MAZI_SYNC_SECRET')+'"></div></div>',fd=>{
-   const n=String(fd.get('secret')||'').trim();
-   set(K.actor,fd.get('actor')||'Μάνος');
-   if(n&&n!==secret()){
-     set(K.secret,n);
-     set(K.bound,0);
-     set(K.dirty,0);
-     set(K.version,0);
-   }
-   setTimeout(()=>pull(true),100);
- },has?'Αποθήκευση & συγχρονισμός':'Σύνδεση');
-}
-window.maziSyncChanged=()=>{
- if(!secret()||!bound())return;
- set(K.dirty,1);
- refresh();
- clearTimeout(pushTimer);
- pushTimer=setTimeout(()=>push(false),900);
-};
+
+removeLegacySync();
+
+window.maziSyncChanged=()=>{};
 window.initMaziSync=()=>{
- refresh();
- const b=document.getElementById('syncStatusButton');
- if(b)b.onclick=settings;
- window.addEventListener('online',()=>dirty()&&bound()?push(false):pull(false));
- window.addEventListener('offline',refresh);
- document.addEventListener('visibilitychange',()=>{if(!document.hidden&&secret()){dirty()&&bound()?push(false):pull(false)}});
- clearInterval(pullTimer);
- pullTimer=setInterval(()=>{if(secret()&&!document.hidden){dirty()&&bound()?push(false):pull(false)}},15000);
- if(secret())pull(true);
+  removeLegacySync();
+  setLocalStatus();
 };
 })();
