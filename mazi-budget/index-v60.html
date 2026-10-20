@@ -19,7 +19,9 @@
 <link rel="stylesheet" href="./cleanui.css?v=1">
 <link rel="stylesheet" href="./tabs-clean.css?v=1">
 <link rel="stylesheet" href="./variable-bills.css?v=1">
-<title>Μαζί — Οικονομικά v7.2</title>
+<link rel="stylesheet" href="./stats.css?v=1">
+<link rel="stylesheet" href="./redesign.css?v=1">
+<title>Μαζί — Οικονομικά v7.3</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--text:#203247;--muted:#78899d;--line:#e2e9f1;--blue:#8bbcf2;--blue2:#dcecff;--green:#3aaa78;--red:#d35d69;--orange:#d99a43;--orange2:#fff3df;--purple:#795db8;--purple2:#f1ebff;--shadow:0 14px 40px rgba(45,62,86,.08)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding-bottom:40px}
@@ -42,7 +44,7 @@
 <body>
 <div class="shell">
 <header class="topbar"><div><div class="eyebrow">Κοινά οικονομικά</div><h1>Μαζί</h1></div><button class="sync-status-btn" id="syncStatusButton" type="button"><span class="sync-dot"></span><span id="syncStatusText">Σύνδεση</span></button></header>
-<div class="tabs"><button id="tabReal" class="active" type="button">Κύκλος</button><button id="tabTest" type="button">Πρόβλεψη</button><button id="tabAdvice" type="button">Στόχος</button><button id="tabGifts" type="button">Εργαλεία</button></div>
+<div class="tabs"><button id="tabReal" class="active" type="button">Κύκλος</button><button id="tabTest" type="button">Πρόβλεψη</button><button id="tabAdvice" type="button">Στόχος</button><button id="tabStats" type="button">Στατιστικά</button><button id="tabGifts" type="button">Εργαλεία</button></div>
 <main id="app"></main>
 </div>
 <dialog id="modal" class="modal"></dialog>
@@ -59,7 +61,7 @@ const expenseBase=[['e1','Δάνειο Πένυ',157],['e2','Δάνειο αυτ
 
 function baseMonth(key,source){
  const inc=source?.incomes?.map(x=>({id:x.id,name:x.name,amount:Number(x.amount||0)}))||incomeBase.map(x=>({id:x[0],name:x[1],amount:x[2]}));
- const exp=source?.expenses?.map(x=>({id:x.id,name:x.name,amount:Number(x.amount||0),active:true,payDay:x.payDay||'',remind:x.remind!==false,variable:x.variable===true,actualKnown:x.variable===true?false:true}))||expenseBase.map(x=>({id:x[0],name:x[1],amount:x[2],active:true,payDay:'',remind:true,variable:x[0]==='e19',actualKnown:x[0]==='e19'?false:true}));
+ const exp=source?.expenses?.map(x=>({id:x.id,name:x.name,amount:Number(x.amount||0),active:true,payDay:x.payDay||'',remind:x.remind!==false,variable:x.variable===true,actualKnown:x.variable===true?false:true,actualEnteredAt:'',actualHistory:[]}))||expenseBase.map(x=>({id:x[0],name:x[1],amount:x[2],active:true,payDay:'',remind:true,variable:x[0]==='e19',actualKnown:x[0]==='e19'?false:true,actualEnteredAt:'',actualHistory:[]}));
  return {key,calculationDate:key+'-25',incomes:inc,expenses:exp,extraIncomes:[],extraExpenses:[]};
 }
 const defaults={schema:6,activeMonth:monthNow(),months:{},savingsTx:[],tests:[],activeTestId:null,longPlan:null,advice:null};
@@ -221,7 +223,8 @@ render();
 <script src="./reminders.js?v=1"></script>
 <script src="./cleanui.js?v=1"></script>
 <script src="./tabs-clean.js?v=1"></script>
-<script src="./variable-bills.js?v=1"></script>
+<script src="./variable-bills.js?v=2"></script>
+<script src="./stats.js?v=1"></script>
 <script src="./sync.js?v=9"></script><script>if(window.initMaziSync)window.initMaziSync();</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body></html>
