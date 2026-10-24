@@ -97,11 +97,20 @@ function paymentModal(id){
   const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
   const paid=paidFor(x),due=dueFor(x);
   const hist=paymentsFor(x).slice().reverse();
+  const legacyPaid=due<=0.005&&hist.length===0&&x.status==='paid';
   const rows=hist.length?'<div class="payment-history">'+hist.map(p=>{const a=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';return '<div class="payment-history-row"><span>'+fmtDate(p.date)+' · '+euro(p.amount)+src+(p.note?' · '+esc(p.note):'')+'</span><div class="payment-history-actions"><button type="button" class="btn soft small" data-set-payment-source="'+p.id+'">'+(a?'Πηγή':'+ Πηγή')+'</button><button type="button" class="remove" data-remove-partial="'+p.id+'">×</button></div></div>'}).join('')+'</div>':'<div class="mini">Δεν έχει καταχωρηθεί αποπληρωμή ακόμη.</div>';
-  const form=due>0.005?'<div class="form-grid partial-grid"><div class="field"><label>Ποσό αποπληρωμής</label><input name="amount" type="number" min="0.01" max="'+due+'" step="0.01" required></div><div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'"></div><div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="other">Άλλα / εκτός εφαρμογής</option>')+'</select></div><div class="field"><label>Σημείωση</label><input name="note" placeholder="π.χ. αποπληρωμή κάρτας"></div></div>':'';
+  const form=due>0.005?'<div class="form-grid partial-grid"><div class="field"><label>Ποσό αποπληρωμής</label><input name="amount" type="number" min="0.01" max="'+due+'" step="0.01" required></div><div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'"></div><div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="other">Άλλα / εκτός εφαρμογής</option>')+'</select></div><div class="field"><label>Σημείωση</label><input name="note" placeholder="π.χ. αποπληρωμή κάρτας"></div></div>':legacyPaid?'<div class="form-grid partial-grid"><div class="field"><label>Ημερομηνία παλιάς πληρωμής</label><input name="date" type="date" value="'+esc(x.updatedAt||x.date||isoToday())+'"></div><div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="other">Άλλα / εκτός εφαρμογής</option>')+'</select></div></div><div class="notice" style="margin-top:10px">Αυτή η εξόφληση είχε ήδη καταχωρηθεί. Τώρα απλώς συνδέεις από ποιο έσοδο πληρώθηκε.</div>':'';
   showModal('Πληρωμές · '+x.name,
     '<div class="payment-balance"><div><small>Αρχικό ποσό</small><strong>'+euro(x.amount)+'</strong></div><div><small>Έχει αποπληρωθεί</small><strong class="positive">'+euro(paid)+'</strong></div><div><small>Υπόλοιπο</small><strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></div></div>'+form+rows,
     fd=>{
+      if(legacyPaid){
+        const sourceId=String(fd.get('sourceId')||'');if(!sourceId)return false;
+        const a=Number(x.amount||0),date=String(fd.get('date')||x.updatedAt||x.date||isoToday());
+        if(window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,a)){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
+        const payment=makePayment(x,a,date,'Παλιά εξόφληση');
+        if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:a,date,targetType:'extraPayment',targetId:payment.id,label:x.name});
+        return;
+      }
       if(due<=0.005)return;
       const a=Math.max(0,Math.min(due,Number(fd.get('amount')||0)));if(!a)return false;
       const sourceId=String(fd.get('sourceId')||'');
@@ -109,7 +118,7 @@ function paymentModal(id){
       const date=String(fd.get('date')||isoToday());
       const payment=makePayment(x,a,date,String(fd.get('note')||''));
       if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:a,date,targetType:'extraPayment',targetId:payment.id,label:x.name});
-    },due>0.005?'Καταχώριση πληρωμής':'Κλείσιμο');
+    },due>0.005?'Καταχώριση πληρωμής':legacyPaid?'Αποθήκευση πηγής':'Κλείσιμο');
   document.querySelectorAll('[data-set-payment-source]').forEach(b=>b.onclick=()=>{
     const p=paymentsFor(x).find(v=>v.id===b.dataset.setPaymentSource);if(!p)return;
     const current=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null;
