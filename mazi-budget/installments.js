@@ -143,10 +143,22 @@ function paymentModal(id){
 window.maziPaymentModal=paymentModal;
 window.maziDueFor=dueFor;
 window.maziPaidFor=paidFor;
+function paymentSourceSummary(m,x){
+  const names=[];
+  for(const p of paymentsFor(x)){
+    const a=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null;
+    if(a&&window.maziFundingLabel){
+      const n=window.maziFundingLabel(m,a.sourceId);
+      if(n&&!names.includes(n))names.push(n);
+    }
+  }
+  if(!names.length)return '';
+  return names.length===1?'Πληρώθηκε από '+names[0]:'Πληρώθηκε από '+names.length+' πηγές';
+}
 function rowIcon(x){const m=String(x.method||'');if(m==='Klarna')return '🛍️';if(m.includes('Πιστω'))return '💳';if(m.includes('Χρεωσ'))return '🏦';if(m.includes('Μετρητ'))return '💶';return '🧾'}
 function rowHtml(x){
-  const paid=paidFor(x),due=dueFor(x),partial=paid>0&&due>0.005;
-  const method=x.method||'Άλλο';
+  const m=curMonth(),paid=paidFor(x),due=dueFor(x),partial=paid>0&&due>0.005;
+  const method=x.method||'Άλλο',sourceText=paymentSourceSummary(m,x);
   const inst=Number(x.installmentCount||0)>1?'<span class="installment-badge">'+Number(x.installmentIndex||1)+'/'+Number(x.installmentCount)+'</span>':'';
   const state=due<=0.005?'Εξοφλήθηκε':partial?'Μερική πληρωμή':'Οφειλή';
   const badge=due<=0.005?'done':partial?'part':'owe';
@@ -154,7 +166,7 @@ function rowHtml(x){
   return '<div class="oneoff-row '+(due<=0.005?'paid':'pending')+' partial-oneoff">'+
     '<div class="oneoff-main"><div class="oneoff-title"><strong>'+rowIcon(x)+' '+esc(x.name)+'</strong>'+inst+'<span class="oneoff-badge '+badge+'">'+state+'</span></div>'+
     '<div class="oneoff-meta">'+esc(method)+(x.dueDate?' · λήξη '+fmtDate(x.dueDate):'')+(dates?' · '+dates:'')+'</div>'+
-    '<div class="partial-progress"><span>Πληρώθηκαν <strong>'+euro(paid)+'</strong></span><span>Υπόλοιπο <strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></span></div></div>'+
+    '<div class="partial-progress"><span>Πληρώθηκαν <strong>'+euro(paid)+'</strong></span><span>Υπόλοιπο <strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></span></div>'+(sourceText?'<div class="payment-source-line">💰 '+esc(sourceText)+'</div>':'')+'</div>'+
     '<input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="r-extraExpense" data-id="'+x.id+'">'+
     '<button class="btn small '+(due>0?'soft':'ghost')+'" data-partial-pay="'+x.id+'">'+(due>0?'+ Πληρωμή':'Πληρωμές')+'</button>'+
     '<button class="remove" data-remove="r-extraExpense" data-id="'+x.id+'">×</button></div>';
