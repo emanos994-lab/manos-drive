@@ -23,7 +23,7 @@ function daysFromToday(date){
 }
 function dueItems(m){
  const lead=Math.max(0,Number(state.reminderPrefs?.leadDays||0));
- return (m.expenses||[]).filter(e=>e.active!==false&&e.remind!==false&&Number(e.payDay)>0).map(e=>{
+ return (m.expenses||[]).filter(e=>e.active!==false&&e.paid!==true&&e.remind!==false&&Number(e.payDay)>0).map(e=>{
   const date=payDateForCycle(m.key,e.payDay); return {e,date,diff:daysFromToday(date)};
  }).filter(x=>x.diff>=0&&x.diff<=lead).sort((a,b)=>a.diff-b.diff);
 }
