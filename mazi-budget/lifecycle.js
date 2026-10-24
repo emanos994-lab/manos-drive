@@ -38,7 +38,7 @@ function finishRecurring(id){
   if(remain<=0.005){x.paid=true;x.paidAt=isoToday();x.updatedAt=isoToday();save();render();return}
   const opts=window.maziFundingOptions?window.maziFundingOptions(m):'<option value="other">Άλλα / εκτός εφαρμογής</option>';
   showModal('Πληρωμή · '+x.name,
-    '<div class="form-grid"><div class="field"><label>Ποσό</label><input name="amount" type="number" min="0.01" max="'+remain+'" step="0.01" value="'+remain+'" required></div>'+
+    '<div class="form-grid"><div class="field"><label>Ποσό που κλείνει τώρα</label><input name="amount" type="number" value="'+remain+'" readonly></div>'+
     '<div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'" required></div>'+
     '<div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+opts+'</select></div>'+
     '<div class="field"><label>Σημείωση</label><input name="reason" placeholder="π.χ. από μισθό Πένυς"></div></div>'+
@@ -53,7 +53,7 @@ function finishRecurring(id){
       const total=m.expenseMoves.filter(v=>v.expenseId===x.id).reduce((s,v)=>s+Number(v.amount||0),0);
       if(total>=Number(x.amount||0)-0.005){x.paid=true;x.paidAt=date;x.completionMoveId=move.id}
       x.updatedAt=date;
-    },remain>=Number(x.amount||0)-spent-0.005?'Πληρωμή & κλείσιμο':'Καταχώριση πληρωμής');
+    },'Πληρωμή & κλείσιμο');
 }
 function undoRecurring(id){
   const m=curMonth(),x=(m.expenses||[]).find(v=>v.id===id);if(!x)return;
