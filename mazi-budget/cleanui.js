@@ -24,9 +24,9 @@ function quickDashboard(m){
   '</section>';
 }
 function panelMeta(key,m){
-  if(key==='fixed')return euro((m.expenses||[]).filter(x=>x.active!==false).reduce((s,x)=>s+Number(x.amount||0),0));
-  if(key==='oneoff')return euro((m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0));
-  if(key==='income')return euro(monthIncome(m));
+  if(key==='fixed')return euro((m.expenses||[]).filter(x=>x.active!==false&&x.paid!==true).reduce((s,x)=>s+Math.max(0,Number(x.amount||0)-fixedSpent(m,x.id)),0));
+  if(key==='oneoff')return euro(window.maziOneOffOutstanding?window.maziOneOffOutstanding(m):(m.extraExpenses||[]).filter(x=>x.status!=='paid').reduce((s,x)=>s+Number(x.amount||0),0));
+  if(key==='income')return euro([...(m.incomes||[]),...(m.extraIncomes||[])].filter(x=>x.received!==true).reduce((s,x)=>s+Number(x.amount||0),0));
   if(key==='savings')return euro(balanceThroughMonth(m.key));
   if(key==='reminders')return 'ημερομηνίες';
   if(key==='review')return 'τέλος κύκλου';
