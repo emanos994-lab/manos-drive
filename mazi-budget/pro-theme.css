@@ -24,8 +24,8 @@ html{background:var(--bg)}body{background:radial-gradient(circle at 12% -10%,#ea
 .wedding-progress i{background:linear-gradient(90deg,#78aee4,#63b68d)!important}
 .credit-balance-card{background:#f7fafc!important;border-color:#dfe7ef!important}
 @media(max-width:700px){
- body{padding-bottom:86px}.shell{padding:0 10px}.topbar{padding:11px 1px 8px}.topbar h1{font-size:21px}
- .tabs{left:7px!important;right:7px!important;bottom:7px!important;padding:4px!important;background:rgba(237,241,244,.94)!important;box-shadow:0 10px 35px rgba(29,44,59,.14)!important}
+ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}#app{padding-bottom:110px;scroll-padding-bottom:140px}.shell{padding:0 10px}.topbar{padding:11px 1px 8px}.topbar h1{font-size:21px}
+ .tabs{left:7px!important;right:7px!important;bottom:calc(7px + env(safe-area-inset-bottom))!important;padding:4px!important;background:rgba(237,241,244,.94)!important;box-shadow:0 10px 35px rgba(29,44,59,.14)!important}
  .tabs button{font-size:9px!important;padding:9px 2px!important;border-radius:9px!important}
  .clean-hero{padding:14px!important}.clean-hero strong{font-size:28px!important}.clean-stats>div{padding:9px!important}
  .clean-panel>summary{min-height:42px}.section{padding:11px!important}
