@@ -126,6 +126,18 @@ function assignRecurringSource(id){
       if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:move.amount,date:move.date,targetType:'move',targetId:move.id,label:x.name});
     },'Αποθήκευση πηγής');
 }
+function completedExtrasInline(m){
+  const extras=(m.extraExpenses||[]).filter(paidExtra);
+  if(!extras.length)return '';
+  const rows=extras.map(x=>{
+    const allocs=(x.payments||[]).map(p=>window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null).filter(Boolean);
+    const names=[...new Set(allocs.map(a=>window.maziFundingLabel?window.maziFundingLabel(m,a.sourceId):'').filter(Boolean))];
+    const source=names.length===1?'Πληρώθηκε από '+names[0]:names.length>1?'Πληρώθηκε από '+names.length+' πηγές':'Δεν έχει οριστεί πηγή πληρωμής';
+    const has=allocs.length>0;
+    return '<div class="completed-extra-inline"><div><strong>🧾 '+esc(x.name)+'</strong><small>'+esc(source)+(x.updatedAt?' · '+fmtDate(x.updatedAt):'')+'</small></div><strong>'+euro(x.amount)+'</strong><button class="btn '+(has?'ghost':'soft')+' small" data-extra-payments="'+x.id+'">'+(has?'Πληρωμές / πηγή':'Ορισμός πηγής')+'</button></div>';
+  }).join('');
+  return '<div class="completed-extra-box"><div class="completed-extra-head"><div><small>Ήδη εξοφλημένα</small><strong>Ολοκληρωμένα έκτακτα</strong></div><span>Μπορείς να ορίσεις ή να αλλάξεις από πού πληρώθηκαν.</span></div>'+rows+'</div>';
+}
 function completedHtml(m){
   const incomes=[...(m.incomes||[]).map(x=>({...x,_kind:'income'})),...(m.extraIncomes||[]).map(x=>({...x,_kind:'extraIncome'}))].filter(x=>x.received===true);
   const expenses=(m.expenses||[]).filter(x=>x.active!==false&&x.paid===true);
@@ -156,6 +168,14 @@ render=function(){
   if(dash&&!app.querySelector('.cycle-live-status'))dash.insertAdjacentHTML('afterend',statusStrip(m));
   const live=app.querySelector('.cycle-live-status'),wallets=window.maziFundingCards?window.maziFundingCards(m):'';
   if(live&&wallets&&!app.querySelector('.funding-wallets'))live.insertAdjacentHTML('afterend',wallets);
+  const oneoff=app.querySelector('.oneoff-section');
+  if(oneoff&&!oneoff.querySelector('.completed-extra-box')){
+    const inline=completedExtrasInline(m);
+    if(inline){
+      const list=oneoff.querySelector('.oneoff-list');
+      if(list)list.insertAdjacentHTML('afterend',inline);else oneoff.insertAdjacentHTML('beforeend',inline);
+    }
+  }
   const review=app.querySelector('[data-clean-panel="review"]')||app.lastElementChild;
   const html=completedHtml(m);
   if(html){
