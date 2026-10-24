@@ -71,7 +71,13 @@ function statusStrip(m){
 const oldIncomeRow=incomeRow;
 incomeRow=function(x,kind,test,fixed){
   if(test)return oldIncomeRow(x,kind,test,fixed);
-  if(x.received===true)return '';
+  if(x.received===true){
+    const m=curMonth();
+    const total=Number(x.receivedAmount==null?x.amount:x.receivedAmount);
+    const left=window.maziSourceRemaining?window.maziSourceRemaining(m,x.id):total;
+    const used=Math.max(0,total-left);
+    return '<div class="received-income-row"><div><div class="received-income-title"><strong>'+moneyEmoji(x,'income')+' '+esc(x.name)+'</strong><span>✓ Μπήκε</span></div><small>'+fmtDate(x.receivedAt||x.updatedAt||isoToday())+' · αρχικό '+euro(total)+(used>0?' · χρησιμοποιήθηκαν '+euro(used):'')+'</small></div><div class="received-income-balance"><small>Διαθέσιμα</small><strong class="'+(left<0?'negative':'positive')+'">'+euro(left)+'</strong></div><button class="btn ghost small" data-income-undo="'+kind+'" data-id="'+x.id+'">Επαναφορά</button></div>';
+  }
   let h=oldIncomeRow(x,kind,test,fixed);
   if(!h)return h;
   h=h.replace('class="money-row ','class="money-row lifecycle-income ');
@@ -126,7 +132,7 @@ function completedHtml(m){
   const extras=(m.extraExpenses||[]).filter(paidExtra);
   if(!incomes.length&&!expenses.length&&!extras.length)return '';
   const rows=[];
-  for(const x of incomes)rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'income')+' '+esc(x.name)+'</strong><small>Μπήκε '+fmtDate(x.receivedAt||x.updatedAt||isoToday())+'</small></div><strong class="positive">'+euro(x.receivedAmount==null?x.amount:x.receivedAmount)+'</strong><button class="btn ghost small" data-income-undo="'+x._kind+'" data-id="'+x.id+'">Επαναφορά</button></div>');
+  for(const x of incomes){const left=window.maziSourceRemaining?window.maziSourceRemaining(m,x.id):Number(x.receivedAmount==null?x.amount:x.receivedAmount);rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'income')+' '+esc(x.name)+'</strong><small>Μπήκε '+fmtDate(x.receivedAt||x.updatedAt||isoToday())+' · διαθέσιμα '+euro(left)+'</small></div><strong class="positive">'+euro(x.receivedAmount==null?x.amount:x.receivedAmount)+'</strong><button class="btn ghost small" data-income-undo="'+x._kind+'" data-id="'+x.id+'">Επαναφορά</button></div>')}
   for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+(budgetIds.has(x.id)?'Έκλεισε ':'Πληρώθηκε ')+fmtDate(x.paidAt||x.updatedAt||isoToday())+src+'</small></div><strong>'+euro(x.amount)+'</strong><div class="completed-actions">'+(!budgetIds.has(x.id)?'<button class="btn soft small" data-expense-source="'+x.id+'">'+(a?'Αλλαγή πηγής':'Ορισμός πηγής')+'</button>':'')+'<button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div></div>')}
   for(const x of extras){const srcs=[...new Set((x.payments||[]).map(p=>window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null).filter(Boolean).map(a=>window.maziFundingLabel?window.maziFundingLabel(m,a.sourceId):''))].filter(Boolean),src=srcs.length===1?' · από '+esc(srcs[0]):srcs.length>1?' · από '+srcs.length+' πηγές':'';rows.push('<div class="completed-row"><div><strong>🧾 '+esc(x.name)+'</strong><small>Εξοφλήθηκε'+(x.updatedAt?' · '+fmtDate(x.updatedAt):'')+src+'</small></div><strong>'+euro(x.amount)+'</strong>'+(window.maziPaymentModal?'<button class="btn ghost small" data-extra-payments="'+x.id+'">Πληρωμές</button>':'<span></span>')+'</div>')}
   return '<details class="completed-panel"><summary><span>✓ Ολοκληρωμένα αυτού του κύκλου</span><small>'+rows.length+' εγγραφές</small></summary><div class="completed-list">'+rows.join('')+'</div></details>';
