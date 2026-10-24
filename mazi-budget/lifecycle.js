@@ -96,8 +96,18 @@ extraExpenseRow=function(x,test){
   return oldExtraRow(x,test);
 };
 function assignRecurringSource(id){
-  const m=curMonth(),x=(m.expenses||[]).find(v=>v.id===id);if(!x||!x.completionMoveId)return;
-  const move=(m.expenseMoves||[]).find(v=>v.id===x.completionMoveId);if(!move)return;
+  const m=curMonth(),x=(m.expenses||[]).find(v=>v.id===id);if(!x)return;
+  m.expenseMoves=Array.isArray(m.expenseMoves)?m.expenseMoves:[];
+  let move=x.completionMoveId?m.expenseMoves.find(v=>v.id===x.completionMoveId):null;
+  if(!move){
+    const candidates=m.expenseMoves.filter(v=>v.expenseId===x.id);
+    move=candidates[candidates.length-1]||null;
+  }
+  if(!move){
+    move={id:uid(),expenseId:x.id,amount:Number(x.amount||0),date:x.paidAt||x.updatedAt||isoToday(),reason:'Εξόφληση · παλιά καταχώρηση'};
+    m.expenseMoves.push(move);
+  }
+  x.completionMoveId=move.id;
   const current=window.maziFundingByTarget?window.maziFundingByTarget(m,'move',move.id):null;
   const opts=window.maziFundingOptions?window.maziFundingOptions(m,current?.sourceId||'',move.amount):'<option value="other">Άλλα / εκτός εφαρμογής</option>';
   showModal('Πηγή πληρωμής · '+x.name,
@@ -117,7 +127,7 @@ function completedHtml(m){
   if(!incomes.length&&!expenses.length&&!extras.length)return '';
   const rows=[];
   for(const x of incomes)rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'income')+' '+esc(x.name)+'</strong><small>Μπήκε '+fmtDate(x.receivedAt||x.updatedAt||isoToday())+'</small></div><strong class="positive">'+euro(x.receivedAmount==null?x.amount:x.receivedAmount)+'</strong><button class="btn ghost small" data-income-undo="'+x._kind+'" data-id="'+x.id+'">Επαναφορά</button></div>');
-  for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+(budgetIds.has(x.id)?'Έκλεισε ':'Πληρώθηκε ')+fmtDate(x.paidAt||x.updatedAt||isoToday())+src+'</small></div><strong>'+euro(x.amount)+'</strong><div class="completed-actions">'+(!budgetIds.has(x.id)&&x.completionMoveId?'<button class="btn soft small" data-expense-source="'+x.id+'">'+(a?'Αλλαγή πηγής':'Ορισμός πηγής')+'</button>':'')+'<button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div></div>')}
+  for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+(budgetIds.has(x.id)?'Έκλεισε ':'Πληρώθηκε ')+fmtDate(x.paidAt||x.updatedAt||isoToday())+src+'</small></div><strong>'+euro(x.amount)+'</strong><div class="completed-actions">'+(!budgetIds.has(x.id)?'<button class="btn soft small" data-expense-source="'+x.id+'">'+(a?'Αλλαγή πηγής':'Ορισμός πηγής')+'</button>':'')+'<button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div></div>')}
   for(const x of extras){const srcs=[...new Set((x.payments||[]).map(p=>window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null).filter(Boolean).map(a=>window.maziFundingLabel?window.maziFundingLabel(m,a.sourceId):''))].filter(Boolean),src=srcs.length===1?' · από '+esc(srcs[0]):srcs.length>1?' · από '+srcs.length+' πηγές':'';rows.push('<div class="completed-row"><div><strong>🧾 '+esc(x.name)+'</strong><small>Εξοφλήθηκε'+(x.updatedAt?' · '+fmtDate(x.updatedAt):'')+src+'</small></div><strong>'+euro(x.amount)+'</strong>'+(window.maziPaymentModal?'<button class="btn ghost small" data-extra-payments="'+x.id+'">Πληρωμές</button>':'<span></span>')+'</div>')}
   return '<details class="completed-panel"><summary><span>✓ Ολοκληρωμένα αυτού του κύκλου</span><small>'+rows.length+' εγγραφές</small></summary><div class="completed-list">'+rows.join('')+'</div></details>';
 }
