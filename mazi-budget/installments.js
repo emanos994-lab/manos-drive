@@ -60,7 +60,7 @@ function installmentModal(){
     '<div class="field"><label>Δόσεις</label><select name="installments" id="purchaseInstallments">'+Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+(i===0?'selected':'')+'>'+(i+1)+(i===0?' δόση':' δόσεις')+'</option>').join('')+'</select></div>'+
     '<div class="field"><label>1η πληρωμή / λήξη</label><input name="dueDate" type="date" value="'+defaultDue+'"></div>'+
     '<div class="field"><label>Η πρώτη δόση</label><select name="status"><option value="pending">Δεν έχει πληρωθεί</option><option value="paid">Πληρώθηκε ήδη</option></select></div>'+
-    '<div class="field"><label>Αν πληρώθηκε, από πού</label><select name="sourceId">'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="">Δεν ορίστηκε</option>')+'</select></div>'+
+    '<div class="field"><label>Αν πληρώθηκε, από πού</label><select name="sourceId" required>'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="other">Άλλα / εκτός εφαρμογής</option>')+'</select></div>'+
     '</div>'+
     '<div class="notice installment-note" style="margin-top:10px"><strong>Δόσεις:</strong> αν επιλέξεις 3, η εφαρμογή θα βάλει αυτόματα 1/3 στον τρέχοντα κύκλο και τις άλλες δύο στους επόμενους.</div>',
     fd=>{
