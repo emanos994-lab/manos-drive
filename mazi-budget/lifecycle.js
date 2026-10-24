@@ -23,6 +23,8 @@ function receiveIncome(kind,id){
 }
 function undoIncome(kind,id){
   const m=curMonth(),list=kind==='extraIncome'?m.extraIncomes:m.incomes,x=list.find(v=>v.id===id);if(!x)return;
+  const used=(m.fundingAllocations||[]).filter(a=>a.sourceId===id).reduce((s,a)=>s+Number(a.amount||0),0);
+  if(used>0.005){alert('Δεν μπορεί να γίνει επαναφορά όσο υπάρχουν πληρωμές '+euro(used)+' συνδεδεμένες με αυτό το έσοδο. Άλλαξε πρώτα την πηγή αυτών των πληρωμών.');return}
   x.received=false;x.receivedAt='';x.receivedAmount=null;x.updatedAt=isoToday();save();render();
 }
 function finishRecurring(id){
@@ -93,6 +95,21 @@ extraExpenseRow=function(x,test){
   if(paidExtra(x))return '';
   return oldExtraRow(x,test);
 };
+function assignRecurringSource(id){
+  const m=curMonth(),x=(m.expenses||[]).find(v=>v.id===id);if(!x||!x.completionMoveId)return;
+  const move=(m.expenseMoves||[]).find(v=>v.id===x.completionMoveId);if(!move)return;
+  const current=window.maziFundingByTarget?window.maziFundingByTarget(m,'move',move.id):null;
+  const opts=window.maziFundingOptions?window.maziFundingOptions(m,current?.sourceId||'',move.amount):'<option value="other">Άλλα / εκτός εφαρμογής</option>';
+  showModal('Πηγή πληρωμής · '+x.name,
+    '<div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+opts+'</select></div>'+
+    '<div class="notice" style="margin-top:10px">Ποσό πληρωμής: <strong>'+euro(move.amount)+'</strong></div>',
+    fd=>{
+      const sourceId=String(fd.get('sourceId')||'');if(!sourceId)return false;
+      if(current&&window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'move',move.id);
+      if(window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,move.amount)){if(current&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId:current.sourceId,amount:current.amount,date:current.date,targetType:'move',targetId:move.id,label:current.label});alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
+      if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:move.amount,date:move.date,targetType:'move',targetId:move.id,label:x.name});
+    },'Αποθήκευση πηγής');
+}
 function completedHtml(m){
   const incomes=[...(m.incomes||[]).map(x=>({...x,_kind:'income'})),...(m.extraIncomes||[]).map(x=>({...x,_kind:'extraIncome'}))].filter(x=>x.received===true);
   const expenses=(m.expenses||[]).filter(x=>x.active!==false&&x.paid===true);
@@ -100,7 +117,7 @@ function completedHtml(m){
   if(!incomes.length&&!expenses.length&&!extras.length)return '';
   const rows=[];
   for(const x of incomes)rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'income')+' '+esc(x.name)+'</strong><small>Μπήκε '+fmtDate(x.receivedAt||x.updatedAt||isoToday())+'</small></div><strong class="positive">'+euro(x.receivedAmount==null?x.amount:x.receivedAmount)+'</strong><button class="btn ghost small" data-income-undo="'+x._kind+'" data-id="'+x.id+'">Επαναφορά</button></div>');
-  for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+(budgetIds.has(x.id)?'Έκλεισε ':'Πληρώθηκε ')+fmtDate(x.paidAt||x.updatedAt||isoToday())+src+'</small></div><strong>'+euro(x.amount)+'</strong><button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div>')}
+  for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+(budgetIds.has(x.id)?'Έκλεισε ':'Πληρώθηκε ')+fmtDate(x.paidAt||x.updatedAt||isoToday())+src+'</small></div><strong>'+euro(x.amount)+'</strong><div class="completed-actions">'+(!budgetIds.has(x.id)&&x.completionMoveId?'<button class="btn soft small" data-expense-source="'+x.id+'">'+(a?'Αλλαγή πηγής':'Ορισμός πηγής')+'</button>':'')+'<button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div></div>')}
   for(const x of extras){const srcs=[...new Set((x.payments||[]).map(p=>window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null).filter(Boolean).map(a=>window.maziFundingLabel?window.maziFundingLabel(m,a.sourceId):''))].filter(Boolean),src=srcs.length===1?' · από '+esc(srcs[0]):srcs.length>1?' · από '+srcs.length+' πηγές':'';rows.push('<div class="completed-row"><div><strong>🧾 '+esc(x.name)+'</strong><small>Εξοφλήθηκε'+(x.updatedAt?' · '+fmtDate(x.updatedAt):'')+src+'</small></div><strong>'+euro(x.amount)+'</strong>'+(window.maziPaymentModal?'<button class="btn ghost small" data-extra-payments="'+x.id+'">Πληρωμές</button>':'<span></span>')+'</div>')}
   return '<details class="completed-panel"><summary><span>✓ Ολοκληρωμένα αυτού του κύκλου</span><small>'+rows.length+' εγγραφές</small></summary><div class="completed-list">'+rows.join('')+'</div></details>';
 }
@@ -109,6 +126,7 @@ function bindLifecycle(){
   document.querySelectorAll('[data-income-undo]').forEach(b=>b.onclick=()=>undoIncome(b.dataset.incomeUndo,b.dataset.id));
   document.querySelectorAll('[data-expense-done]').forEach(b=>b.onclick=()=>finishRecurring(b.dataset.expenseDone));
   document.querySelectorAll('[data-expense-undo]').forEach(b=>b.onclick=()=>undoRecurring(b.dataset.expenseUndo));
+  document.querySelectorAll('[data-expense-source]').forEach(b=>b.onclick=()=>assignRecurringSource(b.dataset.expenseSource));
   document.querySelectorAll('[data-extra-payments]').forEach(b=>b.onclick=()=>window.maziPaymentModal?.(b.dataset.extraPayments));
 }
 const oldBind=bind;
