@@ -103,6 +103,9 @@ function paymentModal(id){
     refreshStatus(x);x.updatedAt=isoToday();save();document.getElementById('modal')?.close();render();
   });
 }
+window.maziPaymentModal=paymentModal;
+window.maziDueFor=dueFor;
+window.maziPaidFor=paidFor;
 function rowIcon(x){const m=String(x.method||'');if(m==='Klarna')return '🛍️';if(m.includes('Πιστω'))return '💳';if(m.includes('Χρεωσ'))return '🏦';if(m.includes('Μετρητ'))return '💶';return '🧾'}
 function rowHtml(x){
   const paid=paidFor(x),due=dueFor(x),partial=paid>0&&due>0.005;
