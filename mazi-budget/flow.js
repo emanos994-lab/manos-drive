@@ -48,7 +48,7 @@ function movementModal(id){
   showModal('Κίνηση · '+e.name,
     '<div class="form-grid"><div class="field"><label>Ποσό που δόθηκε τώρα</label><input name="amount" type="number" min="0" step="0.01" required></div>'+
     '<div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'" required></div>'+
-    '<div class="field"><label>Πληρώθηκε από</label><select name="sourceId">'+sourceOptions+'</select></div>'+
+    '<div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+sourceOptions+'</select></div>'+
     '<div class="field"><label>Γιατί / σημείωση</label><input name="reason" placeholder="π.χ. πήραμε καφέδες νωρίτερα"></div>'+
     '<div class="field"><label>Λήξη υποχρέωσης</label><input name="dueDate" type="date" value="'+esc(e.dueDate||'')+'"></div></div>'+
     '<div class="notice" style="margin-top:10px">Προϋπολογισμός: <strong>'+euro(e.amount)+'</strong> · έχουν ήδη γίνει: <strong>'+euro(spent)+'</strong> · μένουν: <strong>'+euro(remaining)+'</strong>.<br>Αν επιλέξεις μισθό ή άλλο έσοδο, θα αφαιρεθεί από το διαθέσιμο υπόλοιπο εκείνης της πηγής.</div>',
