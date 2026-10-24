@@ -97,7 +97,7 @@ function paymentModal(id){
   const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
   const paid=paidFor(x),due=dueFor(x);
   const hist=paymentsFor(x).slice().reverse();
-  const rows=hist.length?'<div class="payment-history">'+hist.map(p=>{const a=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';return '<div class="payment-history-row"><span>'+fmtDate(p.date)+' · '+euro(p.amount)+src+(p.note?' · '+esc(p.note):'')+'</span><button type="button" class="remove" data-remove-partial="'+p.id+'">×</button></div>'}).join('')+'</div>':'<div class="mini">Δεν έχει καταχωρηθεί αποπληρωμή ακόμη.</div>';
+  const rows=hist.length?'<div class="payment-history">'+hist.map(p=>{const a=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';return '<div class="payment-history-row"><span>'+fmtDate(p.date)+' · '+euro(p.amount)+src+(p.note?' · '+esc(p.note):'')+'</span><div class="payment-history-actions"><button type="button" class="btn soft small" data-set-payment-source="'+p.id+'">'+(a?'Πηγή':'+ Πηγή')+'</button><button type="button" class="remove" data-remove-partial="'+p.id+'">×</button></div></div>'}).join('')+'</div>':'<div class="mini">Δεν έχει καταχωρηθεί αποπληρωμή ακόμη.</div>';
   const form=due>0.005?'<div class="form-grid partial-grid"><div class="field"><label>Ποσό αποπληρωμής</label><input name="amount" type="number" min="0.01" max="'+due+'" step="0.01" required></div><div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'"></div><div class="field"><label>Πληρώθηκε από</label><select name="sourceId">'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="">Δεν ορίστηκε</option>')+'</select></div><div class="field"><label>Σημείωση</label><input name="note" placeholder="π.χ. αποπληρωμή κάρτας"></div></div>':'';
   showModal('Πληρωμές · '+x.name,
     '<div class="payment-balance"><div><small>Αρχικό ποσό</small><strong>'+euro(x.amount)+'</strong></div><div><small>Έχει αποπληρωθεί</small><strong class="positive">'+euro(paid)+'</strong></div><div><small>Υπόλοιπο</small><strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></div></div>'+form+rows,
@@ -110,6 +110,21 @@ function paymentModal(id){
       const payment=makePayment(x,a,date,String(fd.get('note')||''));
       if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:a,date,targetType:'extraPayment',targetId:payment.id,label:x.name});
     },due>0.005?'Καταχώριση πληρωμής':'Κλείσιμο');
+  document.querySelectorAll('[data-set-payment-source]').forEach(b=>b.onclick=()=>{
+    const p=paymentsFor(x).find(v=>v.id===b.dataset.setPaymentSource);if(!p)return;
+    const current=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null;
+    const opts=window.maziFundingOptions?window.maziFundingOptions(m,current?.sourceId||'',p.amount):'<option value="other">Άλλα / εκτός εφαρμογής</option>';
+    const outer=document.getElementById('modal');if(outer)outer.close();
+    setTimeout(()=>showModal('Πηγή πληρωμής · '+x.name,'<div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+opts+'</select></div><div class="notice" style="margin-top:10px">Ποσό: <strong>'+euro(p.amount)+'</strong> · '+fmtDate(p.date)+'</div>',fd=>{
+      const sourceId=String(fd.get('sourceId')||'');if(!sourceId)return false;
+      if(current&&window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'extraPayment',p.id);
+      if(window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,p.amount)){
+        if(current&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId:current.sourceId,amount:current.amount,date:current.date,targetType:'extraPayment',targetId:p.id,label:current.label});
+        alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false;
+      }
+      if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:p.amount,date:p.date,targetType:'extraPayment',targetId:p.id,label:x.name});
+    },'Αποθήκευση πηγής'),60);
+  });
   document.querySelectorAll('[data-remove-partial]').forEach(b=>b.onclick=()=>{
     if(window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'extraPayment',b.dataset.removePartial);
     x.payments=paymentsFor(x).filter(p=>p.id!==b.dataset.removePartial);
