@@ -40,11 +40,13 @@ function splitMoney(total,count){
 }
 function makePayment(x,amount,date,note){
   x.payments=paymentsFor(x);
-  x.payments.push({id:uid(),amount:Number(amount||0),date:date||isoToday(),note:String(note||'').trim()});
+  const p={id:uid(),amount:Number(amount||0),date:date||isoToday(),note:String(note||'').trim()};
+  x.payments.push(p);
   refreshStatus(x);
   if(!x.createdAt)x.createdAt=date||isoToday();
   x.updatedAt=date||isoToday();
   x.auditSeen=true;
+  return p;
 }
 function installmentModal(){
   const m=curMonth();
@@ -58,6 +60,7 @@ function installmentModal(){
     '<div class="field"><label>Δόσεις</label><select name="installments" id="purchaseInstallments">'+Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+(i===0?'selected':'')+'>'+(i+1)+(i===0?' δόση':' δόσεις')+'</option>').join('')+'</select></div>'+
     '<div class="field"><label>1η πληρωμή / λήξη</label><input name="dueDate" type="date" value="'+defaultDue+'"></div>'+
     '<div class="field"><label>Η πρώτη δόση</label><select name="status"><option value="pending">Δεν έχει πληρωθεί</option><option value="paid">Πληρώθηκε ήδη</option></select></div>'+
+    '<div class="field"><label>Αν πληρώθηκε, από πού</label><select name="sourceId">'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="">Δεν ορίστηκε</option>')+'</select></div>'+
     '</div>'+
     '<div class="notice installment-note" style="margin-top:10px"><strong>Δόσεις:</strong> αν επιλέξεις 3, η εφαρμογή θα βάλει αυτόματα 1/3 στον τρέχοντα κύκλο και τις άλλες δύο στους επόμενους.</div>',
     fd=>{
@@ -78,7 +81,12 @@ function installmentModal(){
           status:'pending',payments:[],installmentGroupId:group,installmentIndex:i+1,installmentCount:count,
           purchaseTotal:total,createdAt:isoToday(),updatedAt:isoToday(),auditSeen:true
         };
-        if(i===0&&firstStatus==='paid')makePayment(x,parts[i],purchaseDate,'Πληρώθηκε κατά την καταχώρηση');
+        if(i===0&&firstStatus==='paid'){
+          const sourceId=String(fd.get('sourceId')||'');
+          if(sourceId&&window.maziCanAllocate&&!window.maziCanAllocate(target,sourceId,parts[i])){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
+          const payment=makePayment(x,parts[i],purchaseDate,'Πληρώθηκε κατά την καταχώρηση');
+          if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(target,{sourceId,amount:parts[i],date:purchaseDate,targetType:'extraPayment',targetId:payment.id,label:name});
+        }
         target.extraExpenses.push(x);
       }
     },'Καταχώριση αγοράς');
@@ -89,16 +97,21 @@ function paymentModal(id){
   const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
   const paid=paidFor(x),due=dueFor(x);
   const hist=paymentsFor(x).slice().reverse();
-  const rows=hist.length?'<div class="payment-history">'+hist.map(p=>'<div class="payment-history-row"><span>'+fmtDate(p.date)+' · '+euro(p.amount)+(p.note?' · '+esc(p.note):'')+'</span><button type="button" class="remove" data-remove-partial="'+p.id+'">×</button></div>').join('')+'</div>':'<div class="mini">Δεν έχει καταχωρηθεί αποπληρωμή ακόμη.</div>';
-  const form=due>0.005?'<div class="form-grid partial-grid"><div class="field"><label>Ποσό αποπληρωμής</label><input name="amount" type="number" min="0.01" max="'+due+'" step="0.01" required></div><div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'"></div><div class="field"><label>Σημείωση / από πού</label><input name="note" placeholder="π.χ. 50€ από πατέρα"></div></div>':'';
+  const rows=hist.length?'<div class="payment-history">'+hist.map(p=>{const a=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';return '<div class="payment-history-row"><span>'+fmtDate(p.date)+' · '+euro(p.amount)+src+(p.note?' · '+esc(p.note):'')+'</span><button type="button" class="remove" data-remove-partial="'+p.id+'">×</button></div>'}).join('')+'</div>':'<div class="mini">Δεν έχει καταχωρηθεί αποπληρωμή ακόμη.</div>';
+  const form=due>0.005?'<div class="form-grid partial-grid"><div class="field"><label>Ποσό αποπληρωμής</label><input name="amount" type="number" min="0.01" max="'+due+'" step="0.01" required></div><div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'"></div><div class="field"><label>Πληρώθηκε από</label><select name="sourceId">'+(window.maziFundingOptions?window.maziFundingOptions(m):'<option value="">Δεν ορίστηκε</option>')+'</select></div><div class="field"><label>Σημείωση</label><input name="note" placeholder="π.χ. αποπληρωμή κάρτας"></div></div>':'';
   showModal('Πληρωμές · '+x.name,
     '<div class="payment-balance"><div><small>Αρχικό ποσό</small><strong>'+euro(x.amount)+'</strong></div><div><small>Έχει αποπληρωθεί</small><strong class="positive">'+euro(paid)+'</strong></div><div><small>Υπόλοιπο</small><strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></div></div>'+form+rows,
     fd=>{
       if(due<=0.005)return;
       const a=Math.max(0,Math.min(due,Number(fd.get('amount')||0)));if(!a)return false;
-      makePayment(x,a,String(fd.get('date')||isoToday()),String(fd.get('note')||''));
+      const sourceId=String(fd.get('sourceId')||'');
+      if(sourceId&&window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,a)){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
+      const date=String(fd.get('date')||isoToday());
+      const payment=makePayment(x,a,date,String(fd.get('note')||''));
+      if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:a,date,targetType:'extraPayment',targetId:payment.id,label:x.name});
     },due>0.005?'Καταχώριση πληρωμής':'Κλείσιμο');
   document.querySelectorAll('[data-remove-partial]').forEach(b=>b.onclick=()=>{
+    if(window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'extraPayment',b.dataset.removePartial);
     x.payments=paymentsFor(x).filter(p=>p.id!==b.dataset.removePartial);
     refreshStatus(x);x.updatedAt=isoToday();save();document.getElementById('modal')?.close();render();
   });
