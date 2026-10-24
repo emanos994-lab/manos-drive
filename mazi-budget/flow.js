@@ -44,16 +44,22 @@ recurringRow=function(x,test){
 function movementModal(id){
   const m=ensureFlowMonth(curMonth()),e=expenseById(m,id);if(!e)return;
   const spent=spentFor(m,id),remaining=Math.max(0,Number(e.amount||0)-spent);
+  const sourceOptions=window.maziFundingOptions?window.maziFundingOptions(m):'<option value="">Δεν ορίστηκε</option>';
   showModal('Κίνηση · '+e.name,
     '<div class="form-grid"><div class="field"><label>Ποσό που δόθηκε τώρα</label><input name="amount" type="number" min="0" step="0.01" required></div>'+
     '<div class="field"><label>Ημερομηνία</label><input name="date" type="date" value="'+isoToday()+'" required></div>'+
+    '<div class="field"><label>Πληρώθηκε από</label><select name="sourceId">'+sourceOptions+'</select></div>'+
     '<div class="field"><label>Γιατί / σημείωση</label><input name="reason" placeholder="π.χ. πήραμε καφέδες νωρίτερα"></div>'+
     '<div class="field"><label>Λήξη υποχρέωσης</label><input name="dueDate" type="date" value="'+esc(e.dueDate||'')+'"></div></div>'+
-    '<div class="notice" style="margin-top:10px">Προϋπολογισμός: <strong>'+euro(e.amount)+'</strong> · έχουν ήδη γίνει: <strong>'+euro(spent)+'</strong> · μένουν: <strong>'+euro(remaining)+'</strong>.<br>Η κίνηση <strong>δεν προστίθεται δεύτερη φορά</strong> στα έξοδα. Απλώς δείχνει πόσο από το πάγιο/μπάτζετ έχει ήδη χρησιμοποιηθεί.</div>',
+    '<div class="notice" style="margin-top:10px">Προϋπολογισμός: <strong>'+euro(e.amount)+'</strong> · έχουν ήδη γίνει: <strong>'+euro(spent)+'</strong> · μένουν: <strong>'+euro(remaining)+'</strong>.<br>Αν επιλέξεις μισθό ή άλλο έσοδο, θα αφαιρεθεί από το διαθέσιμο υπόλοιπο εκείνης της πηγής.</div>',
     fd=>{
       const amount=Math.max(0,Number(fd.get('amount')||0));if(!amount)return false;
+      const sourceId=String(fd.get('sourceId')||'');
+      if(sourceId&&window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,amount)){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
       e.dueDate=String(fd.get('dueDate')||'');
-      m.expenseMoves.push({id:uid(),expenseId:id,amount,date:String(fd.get('date')||isoToday()),reason:String(fd.get('reason')||'').trim()});
+      const move={id:uid(),expenseId:id,amount,date:String(fd.get('date')||isoToday()),reason:String(fd.get('reason')||'').trim()};
+      m.expenseMoves.push(move);
+      if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount,date:move.date,targetType:'move',targetId:move.id,label:e.name});
     },'Καταχώριση');
 }
 
@@ -89,13 +95,13 @@ function reviewHtml(m){
   '<div class="review-kpis"><div><small>Προγραμματισμένα πάγια/μπάτζετ</small><strong>'+euro(base)+'</strong></div><div><small>Καταγεγραμμένες κινήσεις μέσα στα πάγια</small><strong>'+euro(actual)+'</strong></div><div><small>Έκτακτα εκτός πλάνου</small><strong>'+euro(extras)+'</strong></div><div><small>Απλήρωτα έκτακτα</small><strong>'+euro(unpaid)+'</strong></div><div class="review-save"><small>Πιθανή αποταμίευση κύκλου</small><strong class="'+(save<0?'negative':'positive')+'">'+euro(save)+'</strong></div></div>'+
   (overruns.length?'<div class="review-block"><h3>Υπερβάσεις</h3>'+overruns.map(e=>'<div class="review-line"><span>'+esc(e.name)+'</span><strong class="negative">+'+euro(spentFor(m,e.id)-Number(e.amount||0))+'</strong></div>').join('')+'</div>':'')+
   (oneoffs.length?'<div class="review-block"><h3>Έκτακτα έξοδα</h3>'+oneoffs.map(x=>'<div class="review-line"><span>'+esc(fmtDate(x.date||isoToday()))+' · '+esc(x.name)+' · '+esc(x.method||'Άλλο')+'</span><strong>'+euro(x.amount)+'</strong></div>').join('')+'</div>':'')+
-  (moves.length?'<div class="review-block"><h3>Πότε χρησιμοποιήθηκαν τα πάγια/μπάτζετ</h3>'+moves.map(x=>{const e=expenseById(m,x.expenseId);return '<div class="review-line"><span>'+esc(fmtDate(x.date))+' · '+esc(e?.name||'Έξοδο')+(x.reason?' · '+esc(x.reason):'')+'</span><div class="history-actions"><strong>'+euro(x.amount)+'</strong><button class="remove" style="width:28px;height:28px" data-remove-move="'+x.id+'">×</button></div></div>'}).join('')+'</div>':'')+
+  (moves.length?'<div class="review-block"><h3>Πότε χρησιμοποιήθηκαν τα πάγια/μπάτζετ</h3>'+moves.map(x=>{const e=expenseById(m,x.expenseId),a=window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.id):null,src=a&&window.maziFundingLabel?(' · από '+window.maziFundingLabel(m,a.sourceId)):'';return '<div class="review-line"><span>'+esc(fmtDate(x.date))+' · '+esc(e?.name||'Έξοδο')+(x.reason?' · '+esc(x.reason):'')+esc(src)+'</span><div class="history-actions"><strong>'+euro(x.amount)+'</strong><button class="remove" style="width:28px;height:28px" data-remove-move="'+x.id+'">×</button></div></div>'}).join('')+'</div>':'')+
   '</section>';
 }
 function bindFlowPanels(){
   const m=ensureFlowMonth(curMonth());
   document.querySelectorAll('[data-expense-move]').forEach(b=>b.onclick=()=>movementModal(b.dataset.expenseMove));
-  document.querySelectorAll('[data-remove-move]').forEach(b=>b.onclick=()=>{m.expenseMoves=m.expenseMoves.filter(x=>x.id!==b.dataset.removeMove);save();render()});
+  document.querySelectorAll('[data-remove-move]').forEach(b=>b.onclick=()=>{if(window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'move',b.dataset.removeMove);m.expenseMoves=m.expenseMoves.filter(x=>x.id!==b.dataset.removeMove);save();render()});
   const amt=document.getElementById('whatIfAmount'),res=document.getElementById('whatIfResult');
   const update=()=>{if(!amt||!res)return;const a=Math.max(0,Number(amt.value||0));if(!a){res.textContent='Βάλε ποσό για να δεις πόσα θα μείνουν για αποταμίευση χωρίς να καταχωριστεί τίποτα.';return}const after=expectedSave(m)-a;res.innerHTML='Αν γίνει αυτή η αγορά, η πιθανή αποταμίευση πέφτει από <strong>'+euro(expectedSave(m))+'</strong> σε <strong class="'+(after<0?'negative':'positive')+'">'+euro(after)+'</strong>.'};
   if(amt){amt.oninput=update;update()}
