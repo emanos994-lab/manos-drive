@@ -49,6 +49,42 @@ function categoryOptions(selected='other'){
   return Object.entries(COMMON_CATS).map(([v,[icon,label]])=>'<option value="'+v+'" '+(v===selected?'selected':'')+'>'+icon+' '+label+'</option>').join('');
 }
 function catInfo(x){return COMMON_CATS[x.category]||COMMON_CATS.other}
+function commonAllocations(m,id){
+  return (m.fundingAllocations||[]).filter(a=>a.targetType==='commonSpend'&&a.targetId===id);
+}
+function commonFundingText(m,x){
+  const allocs=commonAllocations(m,x.id);
+  const names=[...new Set(allocs.map(a=>window.maziFundingLabel?window.maziFundingLabel(m,a.sourceId):'').filter(Boolean))];
+  const funded=allocs.reduce((s,a)=>s+Number(a.amount||0),0),missing=Math.max(0,Number(x.amount||0)-funded);
+  let txt=names.length===1?'Από '+names[0]:names.length>1?'Από '+names.length+' έσοδα':'Δεν έχει βρεθεί διαθέσιμο έσοδο';
+  if(missing>0.005)txt+=' · εκκρεμεί κατανομή '+euro(missing);
+  return txt;
+}
+function fundCommonSpend(m,x,reset=false){
+  ensureCommon(m);
+  if(!window.maziFundingSources||!window.maziAllocateFunding)return;
+  m.fundingAllocations=Array.isArray(m.fundingAllocations)?m.fundingAllocations:[];
+  if(reset)m.fundingAllocations=m.fundingAllocations.filter(a=>!(a.targetType==='commonSpend'&&a.targetId===x.id));
+  let allocated=commonAllocations(m,x.id).reduce((s,a)=>s+Number(a.amount||0),0);
+  let need=Math.max(0,Number(x.amount||0)-allocated);
+  if(need<=0.005)return;
+  const sources=window.maziFundingSources(m).slice().sort((a,b)=>{
+    const ad=String(a.receivedAt||a.updatedAt||''),bd=String(b.receivedAt||b.updatedAt||'');
+    return ad.localeCompare(bd);
+  });
+  for(const source of sources){
+    if(need<=0.005)break;
+    const left=Math.max(0,Number(window.maziSourceRemaining?window.maziSourceRemaining(m,source.id):0));
+    if(left<=0.005)continue;
+    const take=Math.min(need,left);
+    const row=window.maziAllocateFunding(m,{sourceId:source.id,amount:take,date:x.date||isoToday(),targetType:'commonSpend',targetId:x.id,label:x.name||'Κοινό έξοδο'});
+    if(row)need-=take;
+  }
+}
+function syncCommonFunding(m){
+  ensureCommon(m);
+  for(const x of m.commonSpends||[])fundCommonSpend(m,x,false);
+}
 function addCommonModal(editId=''){
   const m=ensureCommon(curMonth()),existing=editId?m.commonSpends.find(x=>x.id===editId):null;
   showModal(existing?'Επεξεργασία κοινού εξόδου':'Κοινό τρέχον έξοδο',
@@ -65,11 +101,13 @@ function addCommonModal(editId=''){
       const row=existing||{id:uid(),createdAt:isoToday()};
       Object.assign(row,{name:String(fd.get('name')||'Κοινό έξοδο').trim()||'Κοινό έξοδο',amount,category:String(fd.get('category')||'other'),date:String(fd.get('date')||isoToday()),note:String(fd.get('note')||'').trim(),updatedAt:isoToday()});
       if(!existing)m.commonSpends.push(row);
+      fundCommonSpend(m,row,true);
     },existing?'Αποθήκευση':'Καταχώριση');
 }
 function removeCommon(id){
   const m=ensureCommon(curMonth()),x=m.commonSpends.find(v=>v.id===id);if(!x)return;
   if(!confirm('Να διαγραφεί το κοινό έξοδο «'+x.name+'»;'))return;
+  if(window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'commonSpend',id);
   m.commonSpends=m.commonSpends.filter(v=>v.id!==id);save();render();
 }
 function availableCard(m){
@@ -90,7 +128,7 @@ function commonSection(m){
   const rows=(m.commonSpends||[]).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   return '<details class="common-spend-panel" '+(rows.length?'':'open')+'><summary><div><strong>🛍️ Κοινά τρέχοντα έξοδα</strong><small>Σουβλάκια, δώρα, γλυκά, βόλτες και άλλα μη προγραμματισμένα κοινά έξοδα.</small></div><span>'+euro(commonTotal(m))+'</span></summary>'+
     '<div class="common-spend-body">'+
-      (rows.length?'<div class="common-spend-list">'+rows.map(x=>{const [icon,label]=catInfo(x);return '<div class="common-spend-row"><div><strong>'+icon+' '+esc(x.name)+'</strong><small>'+esc(label)+' · '+fmtDate(x.date)+(x.note?' · '+esc(x.note):'')+'</small></div><strong>'+euro(x.amount)+'</strong><div class="common-spend-actions"><button class="btn ghost small" data-common-edit="'+x.id+'">Επεξεργασία</button><button class="remove" data-common-remove="'+x.id+'">×</button></div></div>'}).join('')+'</div>':'<div class="lifecycle-empty">Δεν έχει καταχωρηθεί κοινό τρέχον έξοδο ακόμη.</div>')+
+      (rows.length?'<div class="common-spend-list">'+rows.map(x=>{const [icon,label]=catInfo(x),fund=commonFundingText(m,x);return '<div class="common-spend-row"><div><strong>'+icon+' '+esc(x.name)+'</strong><small>'+esc(label)+' · '+fmtDate(x.date)+(x.note?' · '+esc(x.note):'')+'</small><small class="common-funding">💰 '+esc(fund)+'</small></div><strong>'+euro(x.amount)+'</strong><div class="common-spend-actions"><button class="btn ghost small" data-common-edit="'+x.id+'">Επεξεργασία</button><button class="remove" data-common-remove="'+x.id+'">×</button></div></div>'}).join('')+'</div>':'<div class="lifecycle-empty">Δεν έχει καταχωρηθεί κοινό τρέχον έξοδο ακόμη.</div>')+
       '<button class="btn soft common-add-bottom" id="addCommonSpendBottom">+ Νέο κοινό έξοδο</button>'+
     '</div></details>';
 }
@@ -104,6 +142,7 @@ render=function(){
   previousRender();
   if(view!=='real')return;
   const app=document.getElementById('app'),m=ensureCommon(curMonth());if(!app)return;
+  syncCommonFunding(m);
   app.querySelector('.live-money-card')?.remove();
   app.querySelector('.common-spend-panel')?.remove();
   const dash=app.querySelector('.clean-dashboard');
