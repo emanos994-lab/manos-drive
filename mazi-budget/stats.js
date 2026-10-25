@@ -5,10 +5,11 @@ function statMonthData(key){
   const expense=monthExpense(m);
   const saved=monthSavingsNet(key);
   const oneoffs=(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0);
+  const common=(m.commonSpends||[]).reduce((s,x)=>s+Number(x.amount||0),0);
   const dei=(m.expenses||[]).find(x=>x.id==='e19'||x.name==='ΔΕΗ');
   const expected=income-expense;
   return {
-    key,m,income,expense,saved,oneoffs,expected,
+    key,m,income,expense,saved,oneoffs,common,expected,
     deiAmount:Number(dei?.amount||0),
     deiKnown:dei?.actualKnown===true,
     deiEntered:dei?.actualEnteredAt||'',
@@ -36,6 +37,7 @@ function comparisonHtml(rows){
   const cards=[
     ['Σύνολο εξόδων',b.expense-a.expense,'Από '+euro(a.expense)+' σε '+euro(b.expense)],
     ['Έκτακτα',b.oneoffs-a.oneoffs,'Από '+euro(a.oneoffs)+' σε '+euro(b.oneoffs)],
+    ['Κοινά τρέχοντα',b.common-a.common,'Από '+euro(a.common)+' σε '+euro(b.common)],
     ['ΔΕΗ',b.deiAmount-a.deiAmount,'Από '+euro(a.deiAmount)+' σε '+euro(b.deiAmount)],
     ['Μπήκαν στην άκρη',b.saved-a.saved,'Από '+euro(a.saved)+' σε '+euro(b.saved)]
   ];
@@ -48,7 +50,7 @@ function monthlyHistory(rows){
     const expW=Math.min(100,(r.expense/max)*100),saveW=Math.min(100,(Math.max(0,r.saved)/max)*100);
     return '<div class="stats-month-card"><div class="stats-month-head"><div><strong>'+esc(monthLabel(r.key))+'</strong><small>'+euro(r.income)+' έσοδα · '+euro(r.expense)+' έξοδα</small></div><div class="stats-month-save"><small>Στην άκρη</small><strong class="'+(r.saved<0?'negative':'positive')+'">'+euro(r.saved)+'</strong></div></div>'+
     '<div class="stats-bars"><div><span>Έξοδα</span><i><b style="width:'+expW+'%"></b></i></div><div><span>Αποταμίευση</span><i><b class="save" style="width:'+saveW+'%"></b></i></div></div>'+
-    '<div class="stats-month-foot"><span>Έκτακτα '+euro(r.oneoffs)+'</span><span>ΔΕΗ '+euro(r.deiAmount)+(r.deiKnown?'':' · εκτίμηση')+'</span><span>Θεωρητικό υπόλοιπο '+euro(r.expected)+'</span></div></div>';
+    '<div class="stats-month-foot"><span>Έκτακτα '+euro(r.oneoffs)+'</span><span>Κοινά '+euro(r.common)+'</span><span>ΔΕΗ '+euro(r.deiAmount)+(r.deiKnown?'':' · εκτίμηση')+'</span><span>Θεωρητικό υπόλοιπο '+euro(r.expected)+'</span></div></div>';
   }).join('')+'</div>';
 }
 function deiHistory(rows){
