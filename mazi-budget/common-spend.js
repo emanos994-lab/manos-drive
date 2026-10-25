@@ -151,7 +151,7 @@ function addCommonModal(editId=''){
     fd=>{
       const amount=Math.max(0,Number(fd.get('amount')||0));if(!amount)return false;
       const sourceId=String(fd.get('sourceId')||'');if(!sourceId||sourceId==='mixed'){alert('Διάλεξε από πού πληρώθηκε το έξοδο.');return false}
-      const probe=existing||{id:'preview',date:String(fd.get('date')||isoToday()),name:String(fd.get('name')||'Κοινό έξοδο')};
+      const probe=existing?{...existing}:{id:'preview'};
       probe.date=String(fd.get('date')||isoToday());probe.name=String(fd.get('name')||'Κοινό έξοδο');
       if(!canUseCommonSource(m,probe,sourceId,amount)){
         alert(sourceId==='savings'?'Δεν υπάρχουν αρκετά χρήματα στην άκρη για αυτό το έξοδο.':'Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');
