@@ -8,7 +8,8 @@ function fixedSpent(m,id){return (m.expenseMoves||[]).filter(x=>x.expenseId===id
 function remainingBills(m){
   const fixed=(m.expenses||[]).filter(x=>x.active!==false&&x.paid!==true).reduce((s,e)=>s+Math.max(0,Number(e.amount||0)-fixedSpent(m,e.id)),0);
   const oneoff=window.maziOneOffOutstanding?window.maziOneOffOutstanding(m):(m.extraExpenses||[]).filter(x=>x.status!=='paid').reduce((s,x)=>s+Number(x.amount||0),0);
-  return fixed+oneoff;
+  const common=window.maziCommonSpent?window.maziCommonSpent(m):0;
+  return fixed+oneoff+common;
 }
 function recordedSpent(m){
   const fixed=(m.expenseMoves||[]).reduce((s,x)=>s+Number(x.amount||0),0);
