@@ -57,7 +57,7 @@ function allocationByTarget(m,type,id){
 }
 function fundingCards(m){
   const rows=allIncomeSources(m);if(!rows.length)return '';
-  return '<section class="funding-wallets"><div class="funding-wallets-head"><div><small>Κατανομή πληρωμών</small><strong>Υπόλοιπα ανά έσοδο</strong></div><span>οι πληρωμές και τα κοινά καθημερινά κατανέμονται πάνω στα έσοδα που έχουν ήδη μπει</span></div><div class="funding-wallet-grid">'+rows.map(x=>{
+  return '<section class="funding-wallets"><div class="funding-wallets-head"><div><small>Κατανομή πληρωμών</small><strong>Υπόλοιπα ανά έσοδο</strong></div><span>οι πληρωμές μειώνουν το έσοδο που δήλωσες ως πραγματική πηγή</span></div><div class="funding-wallet-grid">'+rows.map(x=>{
     const got=sourceReceived(x),used=sourceUsed(m,x.id),left=got-used;
     return '<div class="funding-wallet"><div><strong>'+esc(x.name)+'</strong><small>Μπήκαν '+euro(got)+'</small></div><div class="funding-wallet-numbers"><span>Χρησιμοποιήθηκαν '+euro(used)+'</span><strong class="'+(left<0?'negative':'')+'">'+euro(left)+' διαθέσιμα</strong></div></div>';
   }).join('')+'</div></section>';
