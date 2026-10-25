@@ -167,7 +167,8 @@ render=function(){
   const dash=app.querySelector('.clean-dashboard');
   if(dash&&!app.querySelector('.cycle-live-status'))dash.insertAdjacentHTML('afterend',statusStrip(m));
   const live=app.querySelector('.cycle-live-status'),wallets=window.maziFundingCards?window.maziFundingCards(m):'';
-  if(live&&wallets&&!app.querySelector('.funding-wallets'))live.insertAdjacentHTML('afterend',wallets);
+  const walletAnchor=app.querySelector('.live-money-card')||live;
+  if(walletAnchor&&wallets&&!app.querySelector('.funding-wallets'))walletAnchor.insertAdjacentHTML('afterend',wallets);
   const oneoff=app.querySelector('.oneoff-section');
   if(oneoff&&!oneoff.querySelector('.completed-extra-box')){
     const inline=completedExtrasInline(m);
