@@ -27,7 +27,9 @@ const flexIds=new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18','e19'
 function recurringExpense(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,x)=>s+Number(x.amount||0),0)}
 function flexibleExpense(m,includeExtras=true){
   const recurring=(m.expenses||[]).filter(x=>x.active!==false&&(flexIds.has(x.id)||x.variable===true)).reduce((s,x)=>s+Number(x.amount||0),0);
-  return recurring+(includeExtras?(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0):0);
+  const extras=includeExtras?(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
+  const common=includeExtras?(m.commonSpends||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
+  return recurring+extras+common;
 }
 function historicalVolatility(){
   const keys=Object.keys(state.months||{}).filter(k=>k<liveKey()).sort().slice(-6);
@@ -49,6 +51,7 @@ function monthModel(key,base,vol,currentKey){
   const income=existing?monthIncome(m):sum(base.incomes||[]);
   const recurring=recurringExpense(m);
   const extras=existing?(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
+  const common=existing?(m.commonSpends||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
   const expense=existing?monthExpense(m):recurring;
   const flex=flexibleExpense(m,!!existing);
   const stable=Math.max(0,expense-flex);
@@ -60,7 +63,7 @@ function monthModel(key,base,vol,currentKey){
     const already=monthSavingsNet(key);
     baseSave-=already;careful-=already;strong-=already;
   }
-  return {key,income,expense,seasonal,extras,baseSave,careful,strong,existing:!!existing};
+  return {key,income,expense,seasonal,extras,common,baseSave,careful,strong,existing:!!existing};
 }
 function weddingProjection(){
   const w=ensureWedding(),currentKey=liveKey(),base=state.months[currentKey]||curMonth(),start=balanceThroughMonth(currentKey),vol=historicalVolatility();
@@ -84,8 +87,9 @@ function weddingRows(p){
   if(!p.rows.length)return '<div class="wedding-empty">Η ημερομηνία στόχου είναι πριν από τον ενεργό κύκλο.</div>';
   return '<div class="wedding-months">'+p.rows.map(r=>{
     const inst=r.extras>0?' · δεσμευμένα/έκτακτα '+euro(r.extras):'';
+    const common=r.common>0?' · κοινά '+euro(r.common):'';
     const gift=r.seasonal>0?' · δώρα/επιδόματα +'+euro(r.seasonal):'';
-    return '<div class="wedding-month"><div><strong>'+esc(monthLabel(r.key))+'</strong><small>Έσοδα '+euro(r.income)+' · έξοδα '+euro(r.expense)+inst+gift+'</small></div><div><small>Πιθανό στην άκρη</small><strong class="'+(r.baseSave<0?'negative':'positive')+'">'+(r.baseSave>=0?'+':'')+euro(r.baseSave)+'</strong><span>σύνολο '+euro(r.baseBalance)+'</span></div></div>';
+    return '<div class="wedding-month"><div><strong>'+esc(monthLabel(r.key))+'</strong><small>Έσοδα '+euro(r.income)+' · έξοδα '+euro(r.expense)+inst+common+gift+'</small></div><div><small>Πιθανό στην άκρη</small><strong class="'+(r.baseSave<0?'negative':'positive')+'">'+(r.baseSave>=0?'+':'')+euro(r.baseSave)+'</strong><span>σύνολο '+euro(r.baseBalance)+'</span></div></div>';
   }).join('')+'</div>';
 }
 function weddingView(){
