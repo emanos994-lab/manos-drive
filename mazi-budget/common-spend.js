@@ -47,7 +47,13 @@ function extraPaid(m){
   },0);
 }
 function actualPaid(m){return recurringPaid(m)+extraPaid(m)+commonTotal(m)}
+function savingsDepositsThisMonth(m){return (state.savingsTx||[]).filter(x=>x.monthKey===m.key&&Number(x.amount||0)>0).reduce((s,x)=>s+Number(x.amount||0),0)}
 function availableNow(m){
+  if(window.maziTotalSourceRemaining){
+    const wallets=window.maziTotalSourceRemaining(m);
+    const movedToSavings=savingsDepositsThisMonth(m);
+    return wallets-movedToSavings;
+  }
   const savings=monthSavingsNet(m.key);
   const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
   return receivedTotal(m)-actualPaid(m)+externalCommonTotal(m)-savings+corrections;
@@ -177,15 +183,17 @@ function removeCommon(id){
   m.commonSpends=m.commonSpends.filter(v=>v.id!==id);save();render();
 }
 function availableCard(m){
-  const received=receivedTotal(m),paidRecurring=recurringPaid(m),paidExtra=extraPaid(m),common=commonTotal(m),saved=monthSavingsNet(m.key),corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0,avail=availableNow(m);
+  const received=receivedTotal(m),paidRecurring=recurringPaid(m),paidExtra=extraPaid(m),common=commonTotal(m);
+  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
+  const walletTotal=window.maziTotalSourceRemaining?window.maziTotalSourceRemaining(m):availableNow(m);
+  const savedOut=savingsDepositsThisMonth(m),avail=availableNow(m);
   const waiting=[...(m.incomes||[]),...(m.extraIncomes||[])].filter(x=>x.received!==true).reduce((s,x)=>s+Number(x.amount||0),0);
   return '<section class="live-money-card">'+
-    '<div class="live-money-main"><small>Πραγματικά διαθέσιμα τώρα</small><strong class="'+(avail<0?'negative':'positive')+'">'+euro(avail)+'</strong><span>Μόνο με χρήματα που έχουν ήδη μπει.</span></div>'+
+    '<div class="live-money-main"><small>Πραγματικά διαθέσιμα τώρα</small><strong class="'+(avail<0?'negative':'positive')+'">'+euro(avail)+'</strong><span>Άθροισμα από τα πραγματικά υπόλοιπα των εσόδων σας.</span></div>'+
     '<div class="live-money-breakdown">'+
-      '<div><span>Έσοδα που μπήκαν</span><strong>'+euro(received)+'</strong></div>'+
-      '<div><span>Πληρωμές υποχρεώσεων</span><strong>-'+euro(paidRecurring+paidExtra)+'</strong></div>'+
-      '<div><span>Κοινά τρέχοντα</span><strong>-'+euro(common)+'</strong></div>'+
-      '<div><span>Καθαρή κίνηση άκρης</span><strong>'+(saved>=0?'-':'+')+euro(Math.abs(saved))+'</strong></div>'+
+      '<div><span>Υπόλοιπα ανά έσοδο</span><strong>'+euro(walletTotal)+'</strong></div>'+
+      '<div><span>Μεταφέρθηκαν στην άκρη</span><strong>'+(savedOut>0?'-':'')+euro(savedOut)+'</strong></div>'+
+      '<div><span>Πληρωμές που έχουν καταγραφεί</span><strong>'+euro(paidRecurring+paidExtra+common)+'</strong></div>'+
       (Math.abs(corrections)>0.005?'<div><span>Διορθώσεις υπολοίπων</span><strong class="'+(corrections<0?'negative':'positive')+'">'+(corrections>0?'+':'')+euro(corrections)+'</strong></div>':'')+
     '</div>'+
     '<div class="live-money-foot"><span>Αναμένονται ακόμη '+euro(waiting)+' σε έσοδα.</span><button class="btn primary small" id="addCommonSpend">+ Κοινό έξοδο</button></div>'+
