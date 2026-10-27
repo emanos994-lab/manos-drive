@@ -42,8 +42,12 @@ function sourceRemaining(m,id){
   const x=knownIncomeSources(m).find(v=>v.id===id);if(!x)return 0;
   return sourceBaseReceived(x)+transferIn(m,id)-transferOut(m,id)+adjustmentNet(m,id)-sourceUsed(m,id);
 }
+function totalSourceRemaining(m){
+  ensureFunding(m);
+  return knownIncomeSources(m).reduce((s,x)=>s+sourceRemaining(m,x.id),0);
+}
 function allIncomeSources(m){
-  return knownIncomeSources(m).filter(x=>x.received===true||sourceRemaining(m,x.id)>0.005);
+  return knownIncomeSources(m).filter(x=>x.received===true||Math.abs(sourceRemaining(m,x.id))>0.005);
 }
 function sourceLabel(m,id){
   if(!id)return 'Δεν ορίστηκε';
@@ -232,6 +236,7 @@ window.maziFundingSources=allIncomeSources;
 window.maziFundingOptions=fundingOptions;
 window.maziFundingLabel=sourceLabel;
 window.maziSourceRemaining=sourceRemaining;
+window.maziTotalSourceRemaining=totalSourceRemaining;
 window.maziCanAllocate=canAllocate;
 window.maziAllocateFunding=allocate;
 window.maziRemoveFundingByTarget=removeByTarget;
