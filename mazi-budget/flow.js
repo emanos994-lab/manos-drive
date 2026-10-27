@@ -13,18 +13,23 @@ function ensureFlowMonth(m){
 }
 for(const m of Object.values(state.months||{}))ensureFlowMonth(m);
 
+const flexibleBudgetIds=new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18']);
+
 function spentFor(m,id){return (m.expenseMoves||[]).filter(x=>x.expenseId===id).reduce((s,x)=>s+Number(x.amount||0),0)}
 function plannedBase(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,x)=>s+Number(x.amount||0),0)}
 function actualBase(m){return (m.expenseMoves||[]).reduce((s,x)=>s+Number(x.amount||0),0)}
-function adjustedBase(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,e)=>s+Math.max(Number(e.amount||0),spentFor(m,e.id)),0)}
+function effectiveRecurring(m,e){const planned=Number(e.amount||0),spent=spentFor(m,e.id);if(flexibleBudgetIds.has(e.id)&&e.paid===true)return spent;return Math.max(planned,spent)}
+function adjustedBase(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,e)=>s+effectiveRecurring(m,e),0)}
 function oneOffTotal(m){return (m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0)}
 function unpaidOneOff(m){return (m.extraExpenses||[]).filter(x=>x.status!=='paid').reduce((s,x)=>s+Number(x.amount||0),0)}
 function expectedSave(m){return monthIncome(m)-monthExpense(m)}
 function remainingObligations(m){
-  const recurring=(m.expenses||[]).filter(x=>x.active!==false).reduce((s,e)=>s+Math.max(0,Number(e.amount||0)-spentFor(m,e.id)),0);
+  const recurring=(m.expenses||[]).filter(x=>x.active!==false&&x.paid!==true).reduce((s,e)=>s+Math.max(0,Number(e.amount||0)-spentFor(m,e.id)),0);
   return recurring+unpaidOneOff(m);
 }
 function expenseById(m,id){return (m.expenses||[]).find(x=>x.id===id)}
+window.maziEffectiveRecurring=effectiveRecurring;
+window.maziFlexibleBudgetIds=flexibleBudgetIds;
 
 const baseMonthExpense=monthExpense;
 monthExpense=function(m){
@@ -141,8 +146,8 @@ addExtra=function(code){
 };
 
 function flowForecastHtml(m){
-  const save=expectedSave(m),base=plannedBase(m),extras=oneOffTotal(m),remaining=remainingObligations(m);
-  return '<section class="flow-forecast"><div class="flow-forecast-main"><small>Με τα σημερινά δεδομένα, από αυτόν τον μισθό μπορεί να μείνουν για αποταμίευση</small><strong class="'+(save<0?'negative':'positive')+'">'+euro(save)+'</strong><span>Πάγια/μπάτζετ '+euro(base)+' · έκτακτα '+euro(extras)+' · υποχρεώσεις που απομένουν '+euro(remaining)+'</span></div>'+
+  const save=expectedSave(m),base=adjustedBase(m),extras=oneOffTotal(m),remaining=remainingObligations(m);
+  return '<section class="flow-forecast"><div class="flow-forecast-main"><small>Με τα σημερινά δεδομένα, από αυτόν τον μισθό μπορεί να μείνουν για αποταμίευση</small><strong class="'+(save<0?'negative':'positive')+'">'+euro(save)+'</strong><span>Τρέχον κόστος πάγιων/μπάτζετ '+euro(base)+' · έκτακτα '+euro(extras)+' · υποχρεώσεις που απομένουν '+euro(remaining)+'</span></div>'+
   '<div class="whatif"><div class="whatif-title">Αν αγοράσουμε κάτι τώρα…</div><div class="whatif-grid"><input id="whatIfName" placeholder="Τι είναι;"><input id="whatIfAmount" type="number" min="0" step="0.01" placeholder="Ποσό"><select id="whatIfStatus"><option value="paid">Πληρώνεται τώρα</option><option value="pending">Θα το πληρώσουμε αργότερα</option></select><button class="btn soft" id="whatIfCommit">Καταχώριση</button></div><div id="whatIfResult" class="whatif-result">Βάλε ποσό για να δεις πόσα θα μείνουν για αποταμίευση χωρίς να καταχωριστεί τίποτα.</div></div></section>';
 }
 function movementSourceModal(moveId){
