@@ -30,7 +30,14 @@ function undoIncome(kind,id){
 function finishRecurring(id){
   const m=curMonth(),x=(m.expenses||[]).find(v=>v.id===id);if(!x)return;
   if(budgetIds.has(x.id)){
-    x.paid=true;x.paidAt=isoToday();x.updatedAt=isoToday();save();render();return;
+    m.expenseMoves=Array.isArray(m.expenseMoves)?m.expenseMoves:[];
+    const spent=m.expenseMoves.filter(v=>v.expenseId===x.id).reduce((s,v)=>s+Number(v.amount||0),0);
+    const planned=Number(x.amount||0),freed=Math.max(0,planned-spent),over=Math.max(0,spent-planned);
+    showModal('Κλείσιμο budget · '+x.name,
+      '<div class="budget-close-summary"><div><small>Budget</small><strong>'+euro(planned)+'</strong></div><div><small>Χρησιμοποιήθηκαν</small><strong>'+euro(spent)+'</strong></div><div><small>'+(over>0?'Υπέρβαση':'Ελευθερώνονται')+'</small><strong class="'+(over>0?'negative':'positive')+'">'+euro(over>0?over:freed)+'</strong></div></div>'+
+      '<div class="notice" style="margin-top:10px">'+(freed>0.005?'Το υπόλοιπο <strong>'+euro(freed)+'</strong> δεν θα μετράει πλέον σαν έξοδο και θα αυξήσει αυτόματα την πιθανή αποταμίευση του κύκλου.':'Το budget θα κλείσει με το ποσό που έχει ήδη χρησιμοποιηθεί.')+'</div>',
+      ()=>{x.paid=true;x.paidAt=isoToday();x.updatedAt=isoToday();},'Κλείσιμο budget');
+    return;
   }
   m.expenseMoves=Array.isArray(m.expenseMoves)?m.expenseMoves:[];
   const spent=m.expenseMoves.filter(v=>v.expenseId===x.id).reduce((s,v)=>s+Number(v.amount||0),0);
@@ -64,7 +71,7 @@ function receivedIncomeTotal(m){return [...(m.incomes||[]),...(m.extraIncomes||[
 function pendingIncomeTotal(m){return [...(m.incomes||[]),...(m.extraIncomes||[])].filter(x=>x.received!==true).reduce((s,x)=>s+Number(x.amount||0),0)}
 function statusStrip(m){
   const got=receivedIncomeTotal(m),waiting=pendingIncomeTotal(m);
-  const done=(m.expenses||[]).filter(x=>x.active!==false&&x.paid===true).reduce((s,x)=>s+Number(x.amount||0),0);
+  const done=(m.expenses||[]).filter(x=>x.active!==false&&x.paid===true).reduce((s,x)=>{if(budgetIds.has(x.id))return s+(m.expenseMoves||[]).filter(v=>v.expenseId===x.id).reduce((a,v)=>a+Number(v.amount||0),0);return s+Number(x.amount||0)},0);
   const pending=(m.expenses||[]).filter(x=>x.active!==false&&x.paid!==true).reduce((s,x)=>s+Math.max(0,Number(x.amount||0)-((m.expenseMoves||[]).filter(v=>v.expenseId===x.id).reduce((a,v)=>a+Number(v.amount||0),0))),0);
   return '<section class="cycle-live-status"><div><small>💰 Έσοδα που ήρθαν</small><strong>'+euro(got)+'</strong><span>Αναμένονται '+euro(waiting)+'</span></div><div><small>✅ Υποχρεώσεις που έκλεισαν</small><strong>'+euro(done)+'</strong><span>Εκκρεμούν περίπου '+euro(pending)+'</span></div></section>';
 }
@@ -145,7 +152,7 @@ function completedHtml(m){
   if(!incomes.length&&!expenses.length&&!extras.length)return '';
   const rows=[];
   for(const x of incomes){const left=window.maziSourceRemaining?window.maziSourceRemaining(m,x.id):Number(x.receivedAmount==null?x.amount:x.receivedAmount);rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'income')+' '+esc(x.name)+'</strong><small>Μπήκε '+fmtDate(x.receivedAt||x.updatedAt||isoToday())+' · διαθέσιμα '+euro(left)+'</small></div><strong class="positive">'+euro(x.receivedAmount==null?x.amount:x.receivedAmount)+'</strong><button class="btn ghost small" data-income-undo="'+x._kind+'" data-id="'+x.id+'">Επαναφορά</button></div>')}
-  for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'';rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+(budgetIds.has(x.id)?'Έκλεισε ':'Πληρώθηκε ')+fmtDate(x.paidAt||x.updatedAt||isoToday())+src+'</small></div><strong>'+euro(x.amount)+'</strong><div class="completed-actions">'+(!budgetIds.has(x.id)?'<button class="btn soft small" data-expense-source="'+x.id+'">'+(a?'Αλλαγή πηγής':'Ορισμός πηγής')+'</button>':'')+'<button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div></div>')}
+  for(const x of expenses){const a=x.completionMoveId&&window.maziFundingByTarget?window.maziFundingByTarget(m,'move',x.completionMoveId):null,src=a&&window.maziFundingLabel?' · από '+esc(window.maziFundingLabel(m,a.sourceId)):'',isBudget=budgetIds.has(x.id),used=isBudget?(m.expenseMoves||[]).filter(v=>v.expenseId===x.id).reduce((s,v)=>s+Number(v.amount||0),0):Number(x.amount||0),freed=isBudget?Math.max(0,Number(x.amount||0)-used):0,meta=isBudget?('Έκλεισε '+fmtDate(x.paidAt||x.updatedAt||isoToday())+' · χρησιμοποιήθηκαν '+euro(used)+' από '+euro(x.amount)+(freed>0.005?' · ελευθερώθηκαν '+euro(freed):'')):('Πληρώθηκε '+fmtDate(x.paidAt||x.updatedAt||isoToday())+src);rows.push('<div class="completed-row"><div><strong>'+moneyEmoji(x,'expense')+' '+esc(x.name)+'</strong><small>'+meta+'</small></div><strong>'+euro(used)+'</strong><div class="completed-actions">'+(!isBudget?'<button class="btn soft small" data-expense-source="'+x.id+'">'+(a?'Αλλαγή πηγής':'Ορισμός πηγής')+'</button>':'')+'<button class="btn ghost small" data-expense-undo="'+x.id+'">Επαναφορά</button></div></div>')}
   for(const x of extras){const allocs=(x.payments||[]).map(p=>window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null).filter(Boolean),srcs=[...new Set(allocs.map(a=>window.maziFundingLabel?window.maziFundingLabel(m,a.sourceId):''))].filter(Boolean),src=srcs.length===1?' · από '+esc(srcs[0]):srcs.length>1?' · από '+srcs.length+' πηγές':'',hasSource=allocs.length>0;rows.push('<div class="completed-row"><div><strong>🧾 '+esc(x.name)+'</strong><small>Εξοφλήθηκε'+(x.updatedAt?' · '+fmtDate(x.updatedAt):'')+src+'</small></div><strong>'+euro(x.amount)+'</strong>'+(window.maziPaymentModal?'<button class="btn '+(hasSource?'ghost':'soft')+' small" data-extra-edit="'+x.id+'">'+(hasSource?'Επεξεργασία / πηγή':'Ορισμός πηγής')+'</button>':'<span></span>')+'</div>')}
   return '<details class="completed-panel"><summary><span>✓ Ολοκληρωμένα αυτού του κύκλου</span><small>'+rows.length+' εγγραφές</small></summary><div class="completed-list">'+rows.join('')+'</div></details>';
 }
