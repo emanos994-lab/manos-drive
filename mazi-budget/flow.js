@@ -22,9 +22,8 @@ function effectiveRecurring(m,e){const planned=Number(e.amount||0),spent=spentFo
 function adjustedBase(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,e)=>s+effectiveRecurring(m,e),0)}
 function oneOffTotal(m){return (m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0)}
 function unpaidOneOff(m){return (m.extraExpenses||[]).filter(x=>x.status!=='paid').reduce((s,x)=>s+Number(x.amount||0),0)}
-function expectedSave(m){return window.maziFinance?window.maziFinance.forecastSavings(m):(monthIncome(m)-monthExpense(m)+(window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0))}
+function expectedSave(m){const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;return monthIncome(m)-monthExpense(m)+corrections}
 function remainingObligations(m){
-  if(window.maziFinance)return window.maziFinance.remainingObligations(m);
   const recurring=(m.expenses||[]).filter(x=>x.active!==false&&x.paid!==true).reduce((s,e)=>s+Math.max(0,Number(e.amount||0)-spentFor(m,e.id)),0);
   return recurring+unpaidOneOff(m);
 }
