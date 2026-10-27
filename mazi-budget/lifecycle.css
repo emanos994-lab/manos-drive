@@ -36,3 +36,6 @@
 .funding-transfer-toolbar .btn{flex:0 0 auto}
 .funding-transfer-toolbar small{color:var(--muted);font-size:8px;text-align:right}
 @media(max-width:650px){.funding-transfer-toolbar{display:grid;grid-template-columns:1fr}.funding-transfer-toolbar .btn{width:100%;font-size:11px;padding:10px 12px}.funding-transfer-toolbar small{text-align:left}}
+
+.budget-close-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.budget-close-summary>div{padding:9px;border:1px solid #e3e9ee;border-radius:10px;background:#fafcfd}.budget-close-summary small{display:block;color:var(--muted);font-size:8px}.budget-close-summary strong{display:block;font-size:13px;margin-top:2px}
+@media(max-width:520px){.budget-close-summary{grid-template-columns:1fr 1fr 1fr}.budget-close-summary strong{font-size:11px}}
