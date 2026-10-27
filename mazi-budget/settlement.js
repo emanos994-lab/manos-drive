@@ -23,7 +23,8 @@ function settlementTx(m){
   return id?(state.savingsTx||[]).find(x=>x.id===id):null;
 }
 function remainingForSavings(m){
-  return monthRemain(m);
+  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
+  return monthRemain(m)+corrections;
 }
 function openFlexibleBudgets(m){
   const ids=window.maziFlexibleBudgetIds||new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18']);
@@ -38,7 +39,7 @@ function flexibleReleasedPreview(m){
 function settlementHtml(m){
   ensureSettlement(m);
   const received=receivedIncome(m),pending=pendingIncome(m),waiting=pendingIncomeTotal(m);
-  const recurring=nonPersonalRecurring(m),personal=personalBudget(m),extras=extraPlanned(m),common=commonSpent(m);
+  const recurring=nonPersonalRecurring(m),personal=personalBudget(m),extras=extraPlanned(m),common=commonSpent(m),corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
   const openBudgets=openFlexibleBudgets(m),releasePreview=flexibleReleasedPreview(m),rem=remainingForSavings(m)+releasePreview,closed=m.settlement.closed===true,tx=settlementTx(m);
   const pendingNames=pending.slice(0,3).map(x=>x.name).join(', ')+(pending.length>3?' κ.ά.':'');
   let action='';
@@ -61,6 +62,7 @@ function settlementHtml(m){
       '<div><span>Προσωπικά Μάνου + Πένυς</span><strong>'+euro(personal)+'</strong></div>'+
       '<div><span>Έκτακτα / δόσεις</span><strong>'+euro(extras)+'</strong></div>'+
       '<div><span>Κοινά τρέχοντα</span><strong>'+euro(common)+'</strong></div>'+
+      '<div><span>Διορθώσεις υπολοίπων</span><strong class="'+(corrections<0?'negative':'positive')+'">'+(corrections>0?'+':'')+euro(corrections)+'</strong></div>'+
       '<div><span>Θεωρητικά έξοδα κύκλου</span><strong>'+euro(monthExpense(m))+'</strong></div>'+
     '</div>'+action+
   '</section>';
