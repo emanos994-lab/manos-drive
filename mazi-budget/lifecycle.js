@@ -169,7 +169,13 @@ render=function(){
   const live=app.querySelector('.cycle-live-status'),wallets=window.maziFundingCards?window.maziFundingCards(m):'';
   const walletAnchor=app.querySelector('.live-money-card')||live;
   if(walletAnchor&&wallets&&!app.querySelector('.funding-wallets'))walletAnchor.insertAdjacentHTML('afterend',wallets);
+  const fw=app.querySelector('.funding-wallets');
+  if(fw&&window.maziTransferModal&&!fw.querySelector('#fundingTransferBtn')&&!fw.querySelector('#fundingTransferBtnBottom')){
+    fw.insertAdjacentHTML('beforeend','<div class="funding-transfer-toolbar"><button class="btn soft" id="fundingTransferBtnBottom">↔ Μεταφορά μεταξύ μισθών / εσόδων</button></div>');
+  }
   window.maziBindFundingTransfers?.();
+  const fallbackTransfer=document.getElementById('fundingTransferBtnBottom');
+  if(fallbackTransfer&&window.maziTransferModal)fallbackTransfer.onclick=window.maziTransferModal;
   const oneoff=app.querySelector('.oneoff-section');
   if(oneoff&&!oneoff.querySelector('.completed-extra-box')){
     const inline=completedExtrasInline(m);
