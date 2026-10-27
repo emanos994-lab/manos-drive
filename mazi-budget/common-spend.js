@@ -48,7 +48,8 @@ function extraPaid(m){
 function actualPaid(m){return recurringPaid(m)+extraPaid(m)+commonTotal(m)}
 function availableNow(m){
   const savings=monthSavingsNet(m.key);
-  return receivedTotal(m)-actualPaid(m)+externalCommonTotal(m)-savings;
+  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
+  return receivedTotal(m)-actualPaid(m)+externalCommonTotal(m)-savings+corrections;
 }
 window.maziCommonSpent=commonTotal;
 window.maziReceivedTotal=receivedTotal;
@@ -175,7 +176,7 @@ function removeCommon(id){
   m.commonSpends=m.commonSpends.filter(v=>v.id!==id);save();render();
 }
 function availableCard(m){
-  const received=receivedTotal(m),paidRecurring=recurringPaid(m),paidExtra=extraPaid(m),common=commonTotal(m),saved=monthSavingsNet(m.key),avail=availableNow(m);
+  const received=receivedTotal(m),paidRecurring=recurringPaid(m),paidExtra=extraPaid(m),common=commonTotal(m),saved=monthSavingsNet(m.key),corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0,avail=availableNow(m);
   const waiting=[...(m.incomes||[]),...(m.extraIncomes||[])].filter(x=>x.received!==true).reduce((s,x)=>s+Number(x.amount||0),0);
   return '<section class="live-money-card">'+
     '<div class="live-money-main"><small>Πραγματικά διαθέσιμα τώρα</small><strong class="'+(avail<0?'negative':'positive')+'">'+euro(avail)+'</strong><span>Μόνο με χρήματα που έχουν ήδη μπει.</span></div>'+
@@ -184,6 +185,7 @@ function availableCard(m){
       '<div><span>Πληρωμές υποχρεώσεων</span><strong>-'+euro(paidRecurring+paidExtra)+'</strong></div>'+
       '<div><span>Κοινά τρέχοντα</span><strong>-'+euro(common)+'</strong></div>'+
       '<div><span>Καθαρή κίνηση άκρης</span><strong>'+(saved>=0?'-':'+')+euro(Math.abs(saved))+'</strong></div>'+
+      (Math.abs(corrections)>0.005?'<div><span>Διορθώσεις υπολοίπων</span><strong class="'+(corrections<0?'negative':'positive')+'">'+(corrections>0?'+':'')+euro(corrections)+'</strong></div>':'')+
     '</div>'+
     '<div class="live-money-foot"><span>Αναμένονται ακόμη '+euro(waiting)+' σε έσοδα.</span><button class="btn primary small" id="addCommonSpend">+ Κοινό έξοδο</button></div>'+
   '</section>';
