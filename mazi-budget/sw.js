@@ -1,4 +1,4 @@
-const CACHE='mazi-budget-v66';
+const CACHE='mazi-budget-v67';
 const ASSETS=['./','./index.html','./index-v60.html','./manifest.webmanifest','./sync.js','./seasonal.js','./seasonal.css','./giftcalc.js','./giftcalc.css','./paycalc.js','./paycalc.css','./cycle.js','./cycle.css','./funding.js','./funding-v7.js','./funding-v8.js','./oneoff.css','./flow.js','./flow.css','./scenario.js','./scenario.css','./reminders.js','./reminders.css','./cleanui.js','./cleanui.css','./tabs-clean.js','./tabs-clean.css','./variable-bills.js','./variable-bills.css','./installments.js','./installments.css','./common-spend.js','./common-spend-v7.js','./common-spend.css','./settlement.js','./settlement.css','./stats.js','./stats.css','./wedding.js','./wedding.css','./pro-theme.css','./lifecycle.js','./lifecycle.css','./redesign.css'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
