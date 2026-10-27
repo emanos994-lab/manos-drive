@@ -26,7 +26,7 @@ function seasonalForWedding(key){
 const flexIds=new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18','e19','e20','e21']);
 function recurringExpense(m){return (m.expenses||[]).filter(x=>x.active!==false).reduce((s,x)=>s+Number(x.amount||0),0)}
 function flexibleExpense(m,includeExtras=true){
-  const recurring=(m.expenses||[]).filter(x=>x.active!==false&&(flexIds.has(x.id)||x.variable===true)).reduce((s,x)=>s+Number(x.amount||0),0);
+  const recurring=(m.expenses||[]).filter(x=>x.active!==false&&(flexIds.has(x.id)||x.variable===true)).reduce((s,x)=>s+(window.maziEffectiveRecurring?window.maziEffectiveRecurring(m,x):Number(x.amount||0)),0);
   const extras=includeExtras?(m.extraExpenses||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
   const common=includeExtras?(m.commonSpends||[]).reduce((s,x)=>s+Number(x.amount||0),0):0;
   return recurring+extras+common;
