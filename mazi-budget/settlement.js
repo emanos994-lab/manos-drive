@@ -68,9 +68,10 @@ function settlementHtml(m){
 function closeSettlement(){
   const m=ensureSettlement(curMonth()),waiting=pendingIncomeTotal(m);
   if(waiting>0.005){alert('Υπάρχουν ακόμη έσοδα που δεν έχουν σημειωθεί ότι μπήκαν.');return}
+  const preview=remainingForSavings(m)+flexibleReleasedPreview(m);
+  if(preview<=0.005){alert('Δεν υπάρχει θετικό υπόλοιπο για μεταφορά στην άκρη.');return}
   for(const x of openFlexibleBudgets(m)){x.paid=true;x.paidAt=isoToday();x.updatedAt=isoToday()}
   const amount=remainingForSavings(m);
-  if(amount<=0.005){alert('Δεν υπάρχει θετικό υπόλοιπο για μεταφορά στην άκρη.');return}
   const tx={id:uid(),date:isoToday(),monthKey:m.key,label:'Τελικό μοίρασμα κύκλου',reason:'Ό,τι περίσσεψε μετά από πάγια, προσωπικά, έκτακτα και κοινά έξοδα',amount,settlementMonth:m.key};
   state.savingsTx.push(tx);
   m.settlement={closed:true,closedAt:isoToday(),amount,txId:tx.id};
