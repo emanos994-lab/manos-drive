@@ -23,14 +23,14 @@ function settlementTx(m){
   return id?(state.savingsTx||[]).find(x=>x.id===id):null;
 }
 function remainingForSavings(m){
-  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
-  return monthRemain(m)+corrections;
+  return window.maziFinance?window.maziFinance.forecastSavings(m):(monthRemain(m)+(window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0));
 }
 function openFlexibleBudgets(m){
   const ids=window.maziFlexibleBudgetIds||new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18']);
   return activeExpenses(m).filter(x=>ids.has(x.id)&&x.paid!==true);
 }
 function flexibleReleasedPreview(m){
+  if(window.maziFinance)return window.maziFinance.unusedFlexible(m);
   return openFlexibleBudgets(m).reduce((s,x)=>{
     const spent=(m.expenseMoves||[]).filter(v=>v.expenseId===x.id).reduce((a,v)=>a+Number(v.amount||0),0);
     return s+Math.max(0,Number(x.amount||0)-spent);
