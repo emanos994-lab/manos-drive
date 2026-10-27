@@ -82,16 +82,38 @@ function installmentModal(){
           purchaseTotal:total,createdAt:isoToday(),updatedAt:isoToday(),auditSeen:true
         };
         if(i===0&&firstStatus==='paid'){
-          const sourceId=String(fd.get('sourceId')||'');
-          if(sourceId&&window.maziCanAllocate&&!window.maziCanAllocate(target,sourceId,parts[i])){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
+          const sourceId=String(fd.get('sourceId')||'');if(!sourceId){alert('Αφού η πρώτη δόση είναι πληρωμένη, διάλεξε από ποιο έσοδο πληρώθηκε.');return false}
+          if(window.maziCanAllocate&&!window.maziCanAllocate(target,sourceId,parts[i])){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
           const payment=makePayment(x,parts[i],purchaseDate,'Πληρώθηκε κατά την καταχώρηση');
-          if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(target,{sourceId,amount:parts[i],date:purchaseDate,targetType:'extraPayment',targetId:payment.id,label:name});
+          if(window.maziAllocateFunding)window.maziAllocateFunding(target,{sourceId,amount:parts[i],date:purchaseDate,targetType:'extraPayment',targetId:payment.id,label:name});
         }
         target.extraExpenses.push(x);
       }
     },'Καταχώριση αγοράς');
   const method=document.getElementById('purchaseMethod'),inst=document.getElementById('purchaseInstallments');
   if(method&&inst)method.onchange=()=>{if(method.value==='Klarna'&&inst.value==='1')inst.value='3'};
+}
+function paymentFunding(m,p){
+  return window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null;
+}
+function missingPaymentSources(m,x){
+  return paymentsFor(x).filter(p=>!paymentFunding(m,p));
+}
+function extraPaymentSourceModal(x,p){
+  const m=curMonth(),current=paymentFunding(m,p);
+  const opts=window.maziFundingOptions?window.maziFundingOptions(m,current?.sourceId||'',p.amount):'<option value="other">Άλλα / εκτός εφαρμογής</option>';
+  showModal('Πηγή πληρωμής · '+x.name,
+    '<div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+opts+'</select></div>'+
+    '<div class="notice" style="margin-top:10px">Ποσό: <strong>'+euro(p.amount)+'</strong> · '+fmtDate(p.date)+'</div>',
+    fd=>{
+      const sourceId=String(fd.get('sourceId')||'');if(!sourceId){alert('Διάλεξε από ποιο έσοδο πληρώθηκε.');return false}
+      if(current&&window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'extraPayment',p.id);
+      if(window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,p.amount)){
+        if(current&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId:current.sourceId,amount:current.amount,date:current.date,targetType:'extraPayment',targetId:p.id,label:current.label});
+        alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false;
+      }
+      if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:p.amount,date:p.date,targetType:'extraPayment',targetId:p.id,label:x.name});
+    },'Αποθήκευση πηγής');
 }
 function paymentModal(id){
   const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
@@ -113,26 +135,16 @@ function paymentModal(id){
       }
       if(due<=0.005)return;
       const a=Math.max(0,Math.min(due,Number(fd.get('amount')||0)));if(!a)return false;
-      const sourceId=String(fd.get('sourceId')||'');
-      if(sourceId&&window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,a)){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
+      const sourceId=String(fd.get('sourceId')||'');if(!sourceId){alert('Διάλεξε από ποιο έσοδο πληρώθηκε.');return false}
+      if(window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,a)){alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false}
       const date=String(fd.get('date')||isoToday());
       const payment=makePayment(x,a,date,String(fd.get('note')||''));
-      if(sourceId&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:a,date,targetType:'extraPayment',targetId:payment.id,label:x.name});
+      if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:a,date,targetType:'extraPayment',targetId:payment.id,label:x.name});
     },due>0.005?'Καταχώριση πληρωμής':legacyPaid?'Αποθήκευση πηγής':'Κλείσιμο');
   document.querySelectorAll('[data-set-payment-source]').forEach(b=>b.onclick=()=>{
     const p=paymentsFor(x).find(v=>v.id===b.dataset.setPaymentSource);if(!p)return;
-    const current=window.maziFundingByTarget?window.maziFundingByTarget(m,'extraPayment',p.id):null;
-    const opts=window.maziFundingOptions?window.maziFundingOptions(m,current?.sourceId||'',p.amount):'<option value="other">Άλλα / εκτός εφαρμογής</option>';
     const outer=document.getElementById('modal');if(outer)outer.close();
-    setTimeout(()=>showModal('Πηγή πληρωμής · '+x.name,'<div class="field"><label>Πληρώθηκε από</label><select name="sourceId" required>'+opts+'</select></div><div class="notice" style="margin-top:10px">Ποσό: <strong>'+euro(p.amount)+'</strong> · '+fmtDate(p.date)+'</div>',fd=>{
-      const sourceId=String(fd.get('sourceId')||'');if(!sourceId)return false;
-      if(current&&window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'extraPayment',p.id);
-      if(window.maziCanAllocate&&!window.maziCanAllocate(m,sourceId,p.amount)){
-        if(current&&window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId:current.sourceId,amount:current.amount,date:current.date,targetType:'extraPayment',targetId:p.id,label:current.label});
-        alert('Δεν φτάνει το διαθέσιμο υπόλοιπο αυτής της πηγής.');return false;
-      }
-      if(window.maziAllocateFunding)window.maziAllocateFunding(m,{sourceId,amount:p.amount,date:p.date,targetType:'extraPayment',targetId:p.id,label:x.name});
-    },'Αποθήκευση πηγής'),60);
+    setTimeout(()=>extraPaymentSourceModal(x,p),60);
   });
   document.querySelectorAll('[data-remove-partial]').forEach(b=>b.onclick=()=>{
     if(window.maziRemoveFundingByTarget)window.maziRemoveFundingByTarget(m,'extraPayment',b.dataset.removePartial);
@@ -158,7 +170,7 @@ function paymentSourceSummary(m,x){
 function rowIcon(x){const m=String(x.method||'');if(m==='Klarna')return '🛍️';if(m.includes('Πιστω'))return '💳';if(m.includes('Χρεωσ'))return '🏦';if(m.includes('Μετρητ'))return '💶';return '🧾'}
 function rowHtml(x){
   const m=curMonth(),paid=paidFor(x),due=dueFor(x),partial=paid>0&&due>0.005;
-  const method=x.method||'Άλλο',sourceText=paymentSourceSummary(m,x);
+  const method=x.method||'Άλλο',sourceText=paymentSourceSummary(m,x),missing=missingPaymentSources(m,x);
   const inst=Number(x.installmentCount||0)>1?'<span class="installment-badge">'+Number(x.installmentIndex||1)+'/'+Number(x.installmentCount)+'</span>':'';
   const state=due<=0.005?'Εξοφλήθηκε':partial?'Μερική πληρωμή':'Οφειλή';
   const badge=due<=0.005?'done':partial?'part':'owe';
@@ -168,7 +180,7 @@ function rowHtml(x){
     '<div class="oneoff-meta">'+esc(method)+(x.dueDate?' · λήξη '+fmtDate(x.dueDate):'')+(dates?' · '+dates:'')+'</div>'+
     '<div class="partial-progress"><span>Πληρώθηκαν <strong>'+euro(paid)+'</strong></span><span>Υπόλοιπο <strong class="'+(due>0?'negative':'positive')+'">'+euro(due)+'</strong></span></div>'+(sourceText?'<div class="payment-source-line">💰 '+esc(sourceText)+'</div>':'')+'</div>'+
     '<input type="number" min="0" step="0.01" value="'+Number(x.amount||0)+'" data-money="r-extraExpense" data-id="'+x.id+'">'+
-    '<button class="btn small '+(due>0?'soft':'ghost')+'" data-partial-pay="'+x.id+'">'+(due>0?'+ Πληρωμή':'Πληρωμές')+'</button>'+
+    '<div class="oneoff-pay-actions"><button class="btn small '+(due>0?'soft':'ghost')+'" data-partial-pay="'+x.id+'">'+(due>0?'+ Πληρωμή':'Πληρωμές')+'</button>'+(paid>0&&missing.length?'<button class="btn small warn" data-quick-extra-source="'+x.id+'">Ορισμός πηγής '+euro(missing[0].amount)+'</button>':'')+'</div>'+
     '<button class="remove" data-remove="r-extraExpense" data-id="'+x.id+'">×</button></div>';
 }
 
@@ -203,6 +215,12 @@ function creditSummary(m){
 }
 function bindInstallments(){
   document.querySelectorAll('[data-partial-pay]').forEach(b=>b.onclick=()=>paymentModal(b.dataset.partialPay));
+  document.querySelectorAll('[data-quick-extra-source]').forEach(b=>b.onclick=()=>{
+    const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===b.dataset.quickExtraSource);if(!x)return;
+    const missing=missingPaymentSources(m,x);
+    if(missing.length)return extraPaymentSourceModal(x,missing[0]);
+    paymentModal(x.id);
+  });
 }
 const oldRender=render;
 render=function(){
