@@ -162,12 +162,24 @@ function sourceAuditModal(sourceId){
   showModal('Ανάλυση · '+src.name,
     '<div class="salary-audit-kpis"><div><small>Μπήκαν</small><strong>'+euro(got)+'</strong></div><div><small>Χρησιμοποιήθηκαν</small><strong>'+euro(used)+'</strong></div><div><small>Μεταφορές</small><strong>'+(incoming-outgoing>=0?'+':'')+euro(incoming-outgoing)+'</strong></div><div><small>Η εφαρμογή δείχνει</small><strong class="'+(left<0?'negative':'positive')+'">'+euro(left)+'</strong></div></div>'+
     '<div class="salary-audit-note">Εδώ βλέπεις ακριβώς τι έχει αφαιρεθεί από αυτόν τον μισθό. Αν κάτι χρεώθηκε λάθος, πάτα <strong>Αλλαγή πηγής</strong>.</div>'+
+    '<div class="salary-compare"><input id="salaryActualBalance" type="number" step="0.01" placeholder="Πραγματικό υπόλοιπο στην τράπεζα"><button type="button" class="btn soft" id="salaryCompareBtn">Σύγκριση</button><div id="salaryCompareResult"></div></div>'+
     '<div class="salary-audit-subtitle">Χρεώσεις</div>'+allocationRows+transferRows,
     ()=>{},'Κλείσιμο');
-  setTimeout(()=>document.querySelectorAll('[data-audit-allocation]').forEach(b=>b.onclick=()=>{
-    document.getElementById('modal')?.close();
-    setTimeout(()=>editAllocationSource(b.dataset.auditAllocation),60);
-  }),0);
+  setTimeout(()=>{
+    document.querySelectorAll('[data-audit-allocation]').forEach(b=>b.onclick=()=>{
+      document.getElementById('modal')?.close();
+      setTimeout(()=>editAllocationSource(b.dataset.auditAllocation),60);
+    });
+    const compare=document.getElementById('salaryCompareBtn');
+    if(compare)compare.onclick=()=>{
+      const actual=Number(document.getElementById('salaryActualBalance')?.value);
+      const out=document.getElementById('salaryCompareResult');if(!out||!Number.isFinite(actual))return;
+      const diff=actual-left;
+      if(Math.abs(diff)<0.005)out.innerHTML='<strong class="positive">Ταιριάζει ακριβώς.</strong>';
+      else if(diff>0)out.innerHTML='Η εφαρμογή δείχνει <strong class="negative">'+euro(Math.abs(diff))+' λιγότερα</strong> από όσα έχεις πραγματικά.';
+      else out.innerHTML='Η εφαρμογή δείχνει <strong class="negative">'+euro(Math.abs(diff))+' περισσότερα</strong> από όσα έχεις πραγματικά.';
+    };
+  },0);
 }
 function fundingCards(m){
   ensureFunding(m);
