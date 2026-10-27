@@ -169,6 +169,7 @@ render=function(){
   const live=app.querySelector('.cycle-live-status'),wallets=window.maziFundingCards?window.maziFundingCards(m):'';
   const walletAnchor=app.querySelector('.live-money-card')||live;
   if(walletAnchor&&wallets&&!app.querySelector('.funding-wallets'))walletAnchor.insertAdjacentHTML('afterend',wallets);
+  window.maziBindFundingTransfers?.();
   const oneoff=app.querySelector('.oneoff-section');
   if(oneoff&&!oneoff.querySelector('.completed-extra-box')){
     const inline=completedExtrasInline(m);
