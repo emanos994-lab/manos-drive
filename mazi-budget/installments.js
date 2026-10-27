@@ -152,6 +152,14 @@ function paymentModal(id){
     refreshStatus(x);x.updatedAt=isoToday();save();document.getElementById('modal')?.close();render();
   });
 }
+function editCompletedExtra(id){
+  const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
+  const hist=paymentsFor(x);
+  if(hist.length===1)return extraPaymentSourceModal(x,hist[0]);
+  if(hist.length>1)return paymentModal(id);
+  return paymentModal(id);
+}
+window.maziEditCompletedExtra=editCompletedExtra;
 window.maziPaymentModal=paymentModal;
 window.maziDueFor=dueFor;
 window.maziPaidFor=paidFor;
