@@ -17,7 +17,7 @@ function recordedSpent(m){
   return fixed+oneoff;
 }
 function quickDashboard(m){
-  const forecast=monthIncome(m)-monthExpense(m),remain=remainingBills(m),spent=recordedSpent(m),savings=balanceThroughMonth(m.key);
+  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0,forecast=monthIncome(m)-monthExpense(m)+corrections,remain=remainingBills(m),spent=recordedSpent(m),savings=balanceThroughMonth(m.key);
   return '<section class="clean-dashboard">'+
    '<div class="clean-hero"><small>Αν δεν αλλάξει κάτι άλλο</small><span>Πιθανή αποταμίευση αυτού του κύκλου</span><strong class="'+(forecast<0?'negative':'positive')+'">'+euro(forecast)+'</strong></div>'+
    '<div class="clean-stats"><div><small>Μένουν να καλυφθούν</small><strong>'+euro(remain)+'</strong></div><div><small>Έχουν καταγραφεί ως πληρωμένα</small><strong>'+euro(spent)+'</strong></div><div><small>Συνολικά στην άκρη</small><strong>'+euro(savings)+'</strong></div></div>'+
