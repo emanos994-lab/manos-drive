@@ -49,10 +49,10 @@ function extraPaid(m){
 function actualPaid(m){return recurringPaid(m)+extraPaid(m)+commonTotal(m)}
 function savingsDepositsThisMonth(m){return (state.savingsTx||[]).filter(x=>x.monthKey===m.key&&Number(x.amount||0)>0).reduce((s,x)=>s+Number(x.amount||0),0)}
 function availableNow(m){
+  if(window.maziFinance)return window.maziFinance.realAvailable(m);
   if(window.maziTotalSourceRemaining){
     const wallets=window.maziTotalSourceRemaining(m);
-    const movedToSavings=savingsDepositsThisMonth(m);
-    return wallets-movedToSavings;
+    return wallets-savingsDepositsThisMonth(m);
   }
   const savings=monthSavingsNet(m.key);
   const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
@@ -185,8 +185,8 @@ function removeCommon(id){
 function availableCard(m){
   const received=receivedTotal(m),paidRecurring=recurringPaid(m),paidExtra=extraPaid(m),common=commonTotal(m);
   const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
-  const walletTotal=window.maziTotalSourceRemaining?window.maziTotalSourceRemaining(m):availableNow(m);
-  const savedOut=savingsDepositsThisMonth(m),avail=availableNow(m);
+  const walletTotal=window.maziFinance?window.maziFinance.walletTotal(m):(window.maziTotalSourceRemaining?window.maziTotalSourceRemaining(m):availableNow(m));
+  const savedOut=window.maziFinance?window.maziFinance.savingsDeposits(m):savingsDepositsThisMonth(m),avail=availableNow(m);
   const waiting=[...(m.incomes||[]),...(m.extraIncomes||[])].filter(x=>x.received!==true).reduce((s,x)=>s+Number(x.amount||0),0);
   return '<section class="live-money-card">'+
     '<div class="live-money-main"><small>Πραγματικά διαθέσιμα τώρα</small><strong class="'+(avail<0?'negative':'positive')+'">'+euro(avail)+'</strong><span>Άθροισμα από τα πραγματικά υπόλοιπα των εσόδων σας.</span></div>'+
