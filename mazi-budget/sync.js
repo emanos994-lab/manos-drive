@@ -46,7 +46,20 @@ function gate(){
       setStatus('Σύνδεση…','busy');
       await auth.signInWithEmailAndPassword(String(fd.get('email')||'').trim(),String(fd.get('password')||''));
     }catch(ex){
-      err.textContent='Δεν έγινε σύνδεση. Έλεγξε email και κωδικό.';
+      const code=String(ex?.code||'');
+      const map={
+        'auth/invalid-credential':'Λάθος email ή κωδικός.',
+        'auth/invalid-login-credentials':'Λάθος email ή κωδικός.',
+        'auth/user-not-found':'Δεν βρέθηκε αυτός ο χρήστης στο Firebase.',
+        'auth/wrong-password':'Ο κωδικός δεν είναι σωστός.',
+        'auth/invalid-email':'Το email δεν είναι έγκυρο.',
+        'auth/user-disabled':'Ο λογαριασμός είναι απενεργοποιημένος.',
+        'auth/network-request-failed':'Πρόβλημα σύνδεσης με το Firebase.',
+        'auth/too-many-requests':'Πολλές προσπάθειες. Δοκίμασε ξανά λίγο αργότερα.',
+        'auth/unauthorized-domain':'Το domain της εφαρμογής δεν είναι εξουσιοδοτημένο στο Firebase.'
+      };
+      err.textContent=(map[code]||('Firebase: '+(code||ex?.message||'άγνωστο σφάλμα')));
+      console.error('Mazi Firebase login error',ex);
       setStatus('Εκτός σύνδεσης','error');
     }
   };
