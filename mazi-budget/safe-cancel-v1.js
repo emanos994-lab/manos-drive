@@ -50,6 +50,11 @@ function cleanupMistakenPrinter133(){
   return true;
 }
 
+function cancelExtraById(id){
+  const m=curMonth(),x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
+  const button={dataset:{remove:'r-extraExpense',id}};
+  return removeExtraSafely(button);
+}
 function removeExtraSafely(button){
   const code=String(button?.dataset?.remove||'');
   if(code!=='r-extraExpense')return window.__maziBaseRemoveExtra?.(button);
@@ -77,6 +82,7 @@ function removeExtraSafely(button){
 
 window.__maziBaseRemoveExtra=window.removeExtra||removeExtra;
 window.removeExtra=removeExtraSafely;
+window.maziCancelExtra=cancelExtraById;
 
 const baseRender=window.render;
 window.render=function(){
@@ -90,6 +96,16 @@ window.render=function(){
     b.classList.remove('remove');
     b.title='Ακύρωση εξόδου και διόρθωση όλων των ποσών';
     b.onclick=()=>removeExtraSafely(b);
+  });
+  document.querySelectorAll('[data-extra-edit]').forEach(edit=>{
+    const id=edit.dataset.extraEdit;
+    const row=edit.closest('.completed-extra-inline,.completed-row');
+    if(!row||row.querySelector('[data-extra-cancel="'+id+'"]'))return;
+    const b=document.createElement('button');
+    b.type='button';b.className='btn danger small';b.dataset.extraCancel=id;b.textContent='Ακύρωση';
+    b.title='Ακύρωση εξόδου και πλήρης διόρθωση ποσών';
+    b.onclick=()=>cancelExtraById(id);
+    edit.insertAdjacentElement('afterend',b);
   });
 };
 })();
