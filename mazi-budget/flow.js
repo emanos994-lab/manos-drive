@@ -228,6 +228,7 @@ function bindFlowPanels(){
   document.querySelectorAll('[data-expense-move]').forEach(b=>b.onclick=()=>movementModal(b.dataset.expenseMove));
   document.querySelectorAll('[data-expense-manage]').forEach(b=>b.onclick=()=>manageExpenseMoves(b.dataset.expenseManage));
   document.querySelectorAll('[data-move-source]').forEach(b=>b.onclick=()=>movementSourceModal(b.dataset.moveSource));
+  document.querySelectorAll('[data-review-extra-cancel]').forEach(b=>b.onclick=()=>window.maziCancelExtra?.(b.dataset.reviewExtraCancel));
   document.querySelectorAll('[data-review-extra-edit]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.reviewExtraEdit,x=(m.extraExpenses||[]).find(v=>v.id===id);if(!x)return;
     const due=window.maziDueFor?window.maziDueFor(x):(x.status==='paid'?0:Number(x.amount||0));
