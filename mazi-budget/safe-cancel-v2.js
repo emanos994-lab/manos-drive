@@ -1,5 +1,5 @@
 (()=>{
-const CLEANUP_KEY='mazi-cleanup-printer-133-v1';
+const CLEANUP_KEY='mazi-cleanup-printer-13334-v2';
 
 function textMatch(v){
   return /(εκτυπωτ|printer)/i.test(String(v||''));
@@ -10,17 +10,17 @@ function cleanupMistakenPrinter133(){
   for(const m of Object.values(state.months||{})){
     for(const mv of (m.expenseMoves||[])){
       const e=(m.expenses||[]).find(x=>x.id===mv.expenseId);
-      if(Math.abs(Number(mv.amount||0)-133)<0.005 && (textMatch(mv.reason)||textMatch(e?.name))){
+      if(Math.abs(Number(mv.amount||0)-133.34)<0.005 && (textMatch(mv.reason)||textMatch(e?.name))){
         hits.push({type:'move',m,mv,e,date:String(mv.date||'')});
       }
     }
     for(const x of (m.extraExpenses||[])){
-      if(Math.abs(Number(x.amount||0)-133)<0.005 && textMatch(x.name)){
+      if(Math.abs(Number(x.amount||0)-133.34)<0.005 && textMatch(x.name)){
         hits.push({type:'extra',m,x,date:String(x.updatedAt||x.createdAt||x.date||'')});
       }
     }
     for(const x of (m.commonSpends||[])){
-      if(Math.abs(Number(x.amount||0)-133)<0.005 && textMatch(x.name)){
+      if(Math.abs(Number(x.amount||0)-133.34)<0.005 && textMatch(x.name)){
         hits.push({type:'common',m,x,date:String(x.date||'')});
       }
     }
