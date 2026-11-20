@@ -23,8 +23,7 @@ function settlementTx(m){
   return id?(state.savingsTx||[]).find(x=>x.id===id):null;
 }
 function remainingForSavings(m){
-  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
-  return monthRemain(m)+corrections;
+  return monthRemain(m);
 }
 function openFlexibleBudgets(m){
   const ids=window.maziFlexibleBudgetIds||new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18']);
