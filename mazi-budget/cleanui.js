@@ -19,7 +19,7 @@ function recordedSpent(m){
 function quickDashboard(m){
   const forecast=window.maziExpectedSave?window.maziExpectedSave(m):(monthIncome(m)-monthExpense(m)+(window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0)),remain=remainingBills(m),spent=recordedSpent(m),savings=balanceThroughMonth(m.key);
   return '<section class="clean-dashboard">'+
-   '<div class="clean-hero"><small>Αν δεν αλλάξει κάτι άλλο</small><span>Πιθανή αποταμίευση αυτού του κύκλου</span><strong class="'+(forecast<0?'negative':'positive')+'">'+euro(forecast)+'</strong></div>'+
+   '<div class="clean-hero"><small>Αν δεν αλλάξει κάτι άλλο</small><span>'+(forecast<0?'Μηνιαία διαφορά προϋπολογισμού, όχι χρέος στην Άκρη':'Πιθανή αποταμίευση αυτού του κύκλου')+'</span><strong class="'+(forecast<0?'negative':'positive')+'">'+euro(forecast<0?Math.abs(forecast):forecast)+'</strong>'+(forecast<0?'<span>Η διαφορά αυτή δεν αφαιρείται από την πραγματική αποταμίευση του επόμενου μήνα.</span>':'')+'</div>'+
    '<div class="clean-stats"><div><small>Μένουν να καλυφθούν</small><strong>'+euro(remain)+'</strong></div><div><small>Έχουν καταγραφεί ως πληρωμένα</small><strong>'+euro(spent)+'</strong></div><div><small>Συνολικά στην άκρη</small><strong>'+euro(savings)+'</strong></div></div>'+
    '<div class="clean-actions"><button class="btn primary" id="cleanAddExpense">+ Έξοδο</button><button class="btn soft" id="cleanAddIncome">+ Έσοδο</button><button class="btn green" id="cleanSavings">Στην άκρη</button><button class="btn warn" id="cleanForecast">Αν αγοράσουμε κάτι…</button></div>'+
   '</section>';
