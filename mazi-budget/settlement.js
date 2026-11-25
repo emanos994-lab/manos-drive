@@ -23,7 +23,8 @@ function settlementTx(m){
   return id?(state.savingsTx||[]).find(x=>x.id===id):null;
 }
 function remainingForSavings(m){
-  return monthRemain(m);
+  const corrections=window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0;
+  return monthRemain(m)+corrections;
 }
 function openFlexibleBudgets(m){
   const ids=window.maziFlexibleBudgetIds||new Set(['e8','e9','e10','e13','e14','e15','e16','e17','e18']);
@@ -54,7 +55,7 @@ function settlementHtml(m){
     action='<div class="settlement-zero"><strong>Ο κύκλος είναι ισοσκελισμένος</strong><span>Δεν μένει ποσό για μεταφορά στην άκρη.</span></div>';
   }
   return '<section class="settlement-card">'+
-    '<div class="settlement-head"><div><small>Τελικό μοίρασμα</small><strong>Ό,τι περισσεύει → στην άκρη</strong><span>Οι προσωρινές πηγές πληρωμής δεν αλλάζουν το τελικό μοίρασμα.</span></div></div>'+
+    '<div class="settlement-head"><div><small>Τελικό μοίρασμα</small><strong>Ό,τι περισσεύει → στην άκρη</strong><span>Το τελικό αποθεματικό περιλαμβάνει τις διορθώσεις πραγματικών υπολοίπων.</span></div></div>'+
     '<div class="settlement-grid">'+
       '<div><span>Έσοδα που έχουν μπει</span><strong>'+euro(received)+'</strong></div>'+
       '<div><span>Πάγια & budgets</span><strong>'+euro(recurring)+'</strong></div>'+
@@ -73,7 +74,7 @@ function closeSettlement(){
   if(preview<=0.005){alert('Δεν υπάρχει θετικό υπόλοιπο για μεταφορά στην άκρη.');return}
   for(const x of openFlexibleBudgets(m)){x.paid=true;x.paidAt=isoToday();x.updatedAt=isoToday()}
   const amount=remainingForSavings(m);
-  const tx={id:uid(),date:isoToday(),monthKey:m.key,label:'Τελικό μοίρασμα κύκλου',reason:'Ό,τι περίσσεψε μετά από πάγια, προσωπικά, έκτακτα και κοινά έξοδα',amount,settlementMonth:m.key};
+  const tx={id:uid(),date:isoToday(),monthKey:m.key,label:'Τελικό μοίρασμα κύκλου',reason:'Ό,τι περίσσεψε μετά από πάγια, προσωπικά, έκτακτα, κοινά έξοδα και διορθώσεις υπολοίπων',amount,settlementMonth:m.key};
   state.savingsTx.push(tx);
   m.settlement={closed:true,closedAt:isoToday(),amount,txId:tx.id};
   save();render();
