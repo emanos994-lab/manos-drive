@@ -110,7 +110,13 @@ function monthExpense(m){return (m.expenses||[]).filter(x=>x.active!==false).red
 function monthSavingsNet(key){return (state.savingsTx||[]).filter(x=>x.monthKey===key).reduce((s,x)=>s+Number(x.amount||0),0)}
 function balanceThroughMonth(key){return (state.savingsTx||[]).filter(x=>(x.monthKey||'0000-00')<=key).reduce((s,x)=>s+Number(x.amount||0),0)}
 function balanceBeforeMonth(key){return (state.savingsTx||[]).filter(x=>(x.monthKey||'0000-00')<key).reduce((s,x)=>s+Number(x.amount||0),0)}
-function monthRemain(m){return monthIncome(m)-monthExpense(m)-monthSavingsNet(m.key)}
+function monthRemain(m){
+ const pending=[...(m.incomes||[]),...(m.extraIncomes||[])].filter(x=>x.received!==true).reduce((a,x)=>a+Number(x.amount||0),0);
+ const fixed=(m.expenses||[]).filter(x=>x.active!==false&&x.paid!==true).reduce((a,x)=>a+Math.max(0,Number(x.amount||0)-(m.expenseMoves||[]).filter(v=>v.expenseId===x.id).reduce((b,v)=>b+Number(v.amount||0),0)),0);
+ const extra=window.maziOneOffOutstanding?window.maziOneOffOutstanding(m):(m.extraExpenses||[]).filter(x=>x.status!=='paid').reduce((a,x)=>a+Math.max(0,Number(x.amount||0)-(x.payments||[]).reduce((b,v)=>b+Number(v.amount||0),0)),0);
+ if(window.maziAvailableNow)return window.maziAvailableNow(m)+pending-fixed-extra;
+ return monthIncome(m)-monthExpense(m)-monthSavingsNet(m.key)+(window.maziFundingAdjustmentNet?window.maziFundingAdjustmentNet(m):0);
+}
 function fmtDate(d){if(!d)return '—';return new Date(d+'T12:00:00').toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric'})}
 function activeTest(){return state.tests.find(x=>x.id===state.activeTestId)||null}
 function testIncome(t){return sum(t.incomes)+sum(t.extraIncomes)}
@@ -225,15 +231,15 @@ render();
 <script src="./paycalc.js?v=1"></script>
 <script src="./cycle.js?v=1"></script>
 <script src="./funding-v8.js?v=3"></script>
-<script src="./flow.js?v=11"></script>
+<script src="./flow.js?v=83"></script>
 <script src="./scenario.js?v=1"></script>
 <script src="./reminders.js?v=2"></script>
-<script src="./cleanui.js?v=9"></script>
+<script src="./cleanui.js?v=83"></script>
 <script src="./tabs-clean.js?v=1"></script>
 <script src="./variable-bills.js?v=4"></script>
 <script src="./installments.js?v=8"></script>
 <script src="./common-spend-v7.js?v=1"></script>
-<script src="./settlement.js?v=82"></script>
+<script src="./settlement.js?v=83"></script>
 <script src="./stats.js?v=4"></script>
 <script src="./wedding.js?v=4"></script>
 <script src="./lifecycle.js?v=13"></script>
